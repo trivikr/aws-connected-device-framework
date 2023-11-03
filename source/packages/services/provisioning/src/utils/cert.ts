@@ -1,9 +1,9 @@
 import { logger } from '@awssolutions/simple-cdf-logger';
 import {
-    DescribeCACertificateRequest,
-    DescribeCACertificateResponse,
-    RegisterCertificateWithoutCAResponse,
-} from 'aws-sdk/clients/iot';
+    DescribeCACertificateCommandInput,
+    DescribeCACertificateCommandOutput,
+    RegisterCertificateWithoutCACommandOutput,
+} from "@aws-sdk/client-iot";
 import { inject, injectable } from 'inversify';
 import ow from 'ow';
 import * as pem from 'pem';
@@ -64,7 +64,7 @@ export class CertUtils {
     public async registerCertificateWithoutCA(
         certificatePem: string,
         status: CertificateStatus
-    ): Promise<RegisterCertificateWithoutCAResponse> {
+    ): Promise<RegisterCertificateWithoutCACommandOutput> {
         logger.debug(`CertUtils: registerCertificateWithoutCA: in: ${certificatePem}`);
 
         const params: AWS.Iot.RegisterCertificateWithoutCARequest = {
@@ -89,13 +89,13 @@ export class CertUtils {
 
         const certificateId = caCertificateArn.split('/')[1];
 
-        const params: DescribeCACertificateRequest = {
+        const params: DescribeCACertificateCommandInput = {
             certificateId,
         };
 
         let caCertificatePem: string;
         try {
-            const response: DescribeCACertificateResponse = await this._iot
+            const response: DescribeCACertificateCommandOutput = await this._iot
                 .describeCACertificate(params)
                 .promise();
             caCertificatePem = response.certificateDescription.certificatePem;

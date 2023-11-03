@@ -13,15 +13,20 @@
 import 'reflect-metadata';
 
 import AWS, { AWSError } from 'aws-sdk';
+import { ACMPCA } from "@aws-sdk/client-acm-pca";
+import { IoT, RemoveThingFromThingGroupCommandOutput, UpdateCertificateCommandInput } from "@aws-sdk/client-iot";
+import { IoTDataPlane } from "@aws-sdk/client-iot-data-plane";
+import { HeadObjectCommandInput, HeadObjectCommandOutput, S3 } from "@aws-sdk/client-s3";
+import { SSM } from "@aws-sdk/client-ssm";
 import { RegistryManager } from '../registry/registry.interfaces';
 import { CertificateService } from './certificates.service';
 
 let mockedRegistryManager: RegistryManager;
-let mockedIot: AWS.Iot;
-let mockedIotData: AWS.IotData;
-let mockedS3: AWS.S3;
-let mockedSSM: AWS.SSM;
-let mockedACMPCA: AWS.ACMPCA;
+let mockedIot: IoT;
+let mockedIotData: IoTDataPlane;
+let mockedS3: S3;
+let mockedSSM: SSM;
+let mockedACMPCA: ACMPCA;
 const accountId = '12345678';
 const region = 'us-west-2';
 const s3Bucket = 'myBucket';
@@ -59,11 +64,16 @@ describe('CertificatesService', () => {
             isWhitelisted: jest.fn((_deviceId) => Promise.resolve(true)),
             updateAssetStatus: jest.fn((_deviceId) => null),
         };
-        mockedS3 = new AWS.S3();
-        mockedIot = new AWS.Iot();
-        mockedIotData = new AWS.IotData({ endpoint: 'mocked' });
-        mockedSSM = new AWS.SSM();
-        mockedACMPCA = new AWS.ACMPCA();
+        mockedS3 = new S3();
+        mockedIot = new IoT();
+        mockedIotData = new IoTDataPlane({
+            // The transformation for endpoint is not implemented.
+            // Refer to UPGRADING.md on aws-sdk-js-v3 for changes needed.
+            // Please create/upvote feature request on aws-sdk-js-codemod for endpoint.
+            endpoint: 'mocked'
+        });
+        mockedSSM = new SSM();
+        mockedACMPCA = new ACMPCA();
 
         const mockedS3Factory = () => {
             return mockedS3;
@@ -202,7 +212,7 @@ describe('CertificatesService', () => {
 
         // verify mocks were called correctly
         expect(mockedIsWhitelisted).toBeCalledWith(deviceId);
-        const expectedHeadObject: AWS.S3.HeadObjectRequest = {
+        const expectedHeadObject: HeadObjectCommandInput = {
             Bucket: s3Bucket,
             Key: `${s3Prefix}${deviceId}${s3Suffix}`,
         };
@@ -249,7 +259,7 @@ describe('CertificatesService', () => {
 
         // verify mocks were called correctly
         expect(mockedIsWhitelisted).toBeCalledWith(deviceId);
-        const expectedHeadObject: AWS.S3.HeadObjectRequest = {
+        const expectedHeadObject: HeadObjectCommandInput = {
             Bucket: s3Bucket,
             Key: `${s3Prefix}${deviceId}${s3Suffix}`,
         };
@@ -301,14 +311,14 @@ describe('CertificatesService', () => {
         // verify mocks were called correctly
         expect(mockedIsWhitelisted).toBeCalledWith(deviceId);
 
-        const expectedUpdateCert: AWS.Iot.UpdateCertificateRequest = {
+        const expectedUpdateCert: UpdateCertificateCommandInput = {
             certificateId,
             newStatus: 'ACTIVE',
         };
         expect(mockUpdateCert).toBeCalledWith(expectedUpdateCert);
 
         const s3Key = `${s3Prefix}${deviceId}${s3Suffix}`;
-        const expectedHeadObject: AWS.S3.HeadObjectRequest = {
+        const expectedHeadObject: HeadObjectCommandInput = {
             Bucket: s3Bucket,
             Key: s3Key,
         };
@@ -701,10 +711,10 @@ const mockError = (overrides: any) => {
 };
 
 class MockHeadObjectOutput {
-    public response: AWS.S3.HeadObjectOutput;
+    public response: HeadObjectCommandOutput;
     public error: AWSError;
 
-    promise(): Promise<AWS.S3.HeadObjectOutput> {
+    promise(): Promise<HeadObjectCommandOutput> {
         return new Promise((resolve, reject) => {
             if (this.error !== null) {
                 return reject(this.error);
@@ -731,10 +741,10 @@ class UpdateCertificateResponse {
 }
 
 class RemoveThingFromThingGroupResponse {
-    public response: AWS.Iot.RemoveThingFromThingGroupResponse;
+    public response: RemoveThingFromThingGroupCommandOutput;
     public error: AWSError;
 
-    promise(): Promise<AWS.Iot.RemoveThingFromThingGroupResponse> {
+    promise(): Promise<RemoveThingFromThingGroupCommandOutput> {
         return new Promise((resolve, reject) => {
             if (this.error !== null) {
                 return reject(this.error);

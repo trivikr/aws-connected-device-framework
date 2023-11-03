@@ -10,7 +10,10 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions    *
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
-import AWS from 'aws-sdk';
+
+
+import { any } from "@aws-sdk/lib-dynamodb";
+import { DocumentClient } from "@aws-sdk/client-dynamodb";
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../di/types';
 import { logger } from '../utils/logger';
@@ -18,12 +21,12 @@ import { CommandListModel, CommandModel, CommandSummaryModel } from './commands.
 
 @injectable()
 export class CommandsDao {
-    private _dc: AWS.DynamoDB.DocumentClient;
+    private _dc: DocumentClient;
 
     public constructor(
         @inject('tables.jobs') private jobsTable: string,
         @inject(TYPES.DocumentClientFactory)
-        documentClientFactory: () => AWS.DynamoDB.DocumentClient
+        documentClientFactory: () => DocumentClient
     ) {
         this._dc = documentClientFactory();
     }
@@ -73,7 +76,7 @@ export class CommandsDao {
         return command;
     }
 
-    private buildCommandModel(i: AWS.DynamoDB.DocumentClient.AttributeMap): CommandModel {
+    private buildCommandModel(i: Record<string, any>): CommandModel {
         const command: CommandModel = {
             commandId: i['commandId'],
             description: i['description'],

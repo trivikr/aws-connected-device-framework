@@ -11,12 +11,13 @@
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
 
-import { IotData } from 'aws-sdk';
+
+
+import { IoTDataPlane, UpdateThingShadowCommandInput } from "@aws-sdk/client-iot-data-plane";
 import { inject, injectable } from 'inversify';
 import ow from 'ow';
 
 import { logger } from '@awssolutions/simple-cdf-logger';
-import AWS from 'aws-sdk';
 import { CommandItem, ShadowDeliveryMethod } from '../../commands/commands.models';
 import { TYPES } from '../../di/types';
 import { MessagesDao } from '../messages.dao';
@@ -25,12 +26,12 @@ import { WorkflowPublishAction } from './workflow.publishAction';
 
 @injectable()
 export class ShadowAction extends WorkflowPublishAction {
-    private iotData: AWS.IotData;
+    private iotData: IoTDataPlane;
 
     constructor(
         @inject('aws.iot.shadow.name') private shadowName: string,
         @inject(TYPES.MessagesDao) private messagesDao: MessagesDao,
-        @inject(TYPES.IotDataFactory) iotDataFactory: () => AWS.IotData
+        @inject(TYPES.IotDataFactory) iotDataFactory: () => IoTDataPlane
     ) {
         super();
         this.iotData = iotDataFactory();
@@ -94,7 +95,7 @@ export class ShadowAction extends WorkflowPublishAction {
         };
         shadowUpdate.state.desired[operation] = payload;
 
-        const params: IotData.UpdateThingShadowRequest = {
+        const params: UpdateThingShadowCommandInput = {
             thingName,
             shadowName: this.shadowName,
             payload: JSON.stringify(shadowUpdate),

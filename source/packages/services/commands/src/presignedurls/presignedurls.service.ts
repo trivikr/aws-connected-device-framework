@@ -10,7 +10,9 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions    *
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
-import { Iot } from 'aws-sdk';
+
+
+import { Job } from "@aws-sdk/client-iot";
 import { inject, injectable } from 'inversify';
 import ow from 'ow';
 import { CommandModel } from '../commands/commands.models';
@@ -169,7 +171,7 @@ export class PresignedUrlsService {
 
     private async getCommandAndJobInfo(
         commandId: string
-    ): Promise<[CommandModel, TemplateModel, Iot.Job]> {
+    ): Promise<[CommandModel, TemplateModel, Job]> {
         logger.debug(`presignedurls.service getCommandAndJobInfo: in: commandId: ${commandId}`);
 
         const command = await this.commandService.get(commandId);
@@ -267,7 +269,7 @@ export class PresignedUrlsService {
         return signedUrl;
     }
 
-    private async validateDeviceIsTarget(thingName: string, job: Iot.Job): Promise<boolean> {
+    private async validateDeviceIsTarget(thingName: string, job: Job): Promise<boolean> {
         logger.debug(
             `presignedurls.service validateDeviceIsTarget: in: thingName:${thingName}, job:${JSON.stringify(
                 job

@@ -12,7 +12,8 @@
  *********************************************************************************************************************/
 import 'reflect-metadata';
 
-import AWS from 'aws-sdk';
+import { IoT } from "@aws-sdk/client-iot";
+import { SSM } from "@aws-sdk/client-ssm";
 import createMockInstance from 'jest-create-mock-instance';
 import clone from 'just-clone';
 import * as pem from 'pem';
@@ -24,8 +25,8 @@ import { ProvisioningStepData } from './provisioningStep.model';
 describe('CreateDeviceCertificateStepProcessor', () => {
     let instance: CreateDeviceCertificateStepProcessor;
 
-    const mockIot = new AWS.Iot();
-    const mockSSM = new AWS.SSM();
+    const mockIot = new IoT();
+    const mockSSM = new SSM();
     let certUtils: jest.Mocked<CertUtils>;
 
     beforeEach(() => {

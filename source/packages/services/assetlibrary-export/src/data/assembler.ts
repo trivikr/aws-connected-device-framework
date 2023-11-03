@@ -11,7 +11,7 @@
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
 import { logger } from '@awssolutions/simple-cdf-logger';
-import { ThingDocument, ThingGroupDocument } from 'aws-sdk/clients/iot';
+import { ThingDocument, ThingGroupDocument } from "@aws-sdk/client-iot";
 import { process } from 'gremlin';
 import { injectable } from 'inversify';
 import { TypeCategory } from '../types/constants';

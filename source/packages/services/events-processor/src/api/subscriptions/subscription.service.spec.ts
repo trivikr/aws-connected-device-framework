@@ -12,8 +12,8 @@
  *********************************************************************************************************************/
 import 'reflect-metadata';
 
-import AWS from 'aws-sdk';
-import { ListSubscriptionsResponse } from 'aws-sdk/clients/sns';
+import { ListSubscriptionsCommandOutput } from "@aws-sdk/client-sns";
+import { SQS } from "@aws-sdk/client-sqs";
 import { createMockInstance } from 'jest-create-mock-instance';
 import { EventDao } from '../events/event.dao';
 import { SNSTarget } from '../targets/processors/sns.target';
@@ -36,7 +36,7 @@ describe('SubscriptionService', () => {
     let mockedSubscriptionAssembler: jest.Mocked<SubscriptionAssembler>;
     let mockedTargetService: jest.Mocked<TargetService>;
     let mockedSNSTarget: jest.Mocked<SNSTarget>;
-    let mockedSQS: AWS.SQS;
+    let mockedSQS: SQS;
     let instance: SubscriptionService;
 
     beforeEach(() => {
@@ -45,7 +45,7 @@ describe('SubscriptionService', () => {
         mockedSubscriptionAssembler = createMockInstance(SubscriptionAssembler);
         mockedTargetService = createMockInstance(TargetService);
         mockedSNSTarget = createMockInstance(SNSTarget);
-        mockedSQS = new AWS.SQS();
+        mockedSQS = new SQS();
         const mockedSQSFactory = () => {
             return mockedSQS;
         };
@@ -115,7 +115,7 @@ describe('SubscriptionService', () => {
         // mocks
         const mockedDaoGet = (mockedSubscriptionDao.get = jest.fn().mockReturnValue(stubbedItem));
         mockedSNSTarget.isPendingConfirmation = jest.fn().mockReturnValue(true);
-        const snsListResponse: ListSubscriptionsResponse = {
+        const snsListResponse: ListSubscriptionsCommandOutput = {
             Subscriptions: [
                 {
                     Endpoint: 'someone@somewhere.com',
@@ -160,7 +160,7 @@ describe('SubscriptionService', () => {
         // mocks
         const mockedDaoGet = (mockedSubscriptionDao.get = jest.fn().mockReturnValue(stubbedItem));
         mockedSNSTarget.isPendingConfirmation = jest.fn().mockReturnValue(true);
-        const snsListResponse: ListSubscriptionsResponse = {
+        const snsListResponse: ListSubscriptionsCommandOutput = {
             Subscriptions: [
                 {
                     Endpoint: 'someone@somewhere.com',
@@ -213,7 +213,7 @@ describe('SubscriptionService', () => {
         // mocks
         const mockedDaoGet = (mockedSubscriptionDao.get = jest.fn().mockReturnValue(stubbedItem));
         mockedSNSTarget.isPendingConfirmation = jest.fn().mockReturnValue(true);
-        const snsListResponse: ListSubscriptionsResponse = {
+        const snsListResponse: ListSubscriptionsCommandOutput = {
             Subscriptions: [],
         };
         const mockedSnsList = (mockedSNSTarget.listSubscriptions = jest

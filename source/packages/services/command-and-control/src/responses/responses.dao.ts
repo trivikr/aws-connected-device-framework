@@ -12,6 +12,8 @@
  *********************************************************************************************************************/
 import { logger } from '@awssolutions/simple-cdf-logger';
 import AWS from 'aws-sdk';
+// Transformation of DocumentClient named import from deep path is unsupported in aws-sdk-js-codemod.
+// Please convert to a default import, and re-run aws-sdk-js-codemod.
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../di/types';

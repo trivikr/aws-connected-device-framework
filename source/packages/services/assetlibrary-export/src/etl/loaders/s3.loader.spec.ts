@@ -12,16 +12,18 @@
  *********************************************************************************************************************/
 import 'reflect-metadata';
 
-import AWS, { AWSError } from 'aws-sdk';
+import { AWSError } from 'aws-sdk';
+
+import { S3 } from "@aws-sdk/client-s3";
 
 import { S3Loader } from './s3.loader';
 
 describe('S3Loader', () => {
-    let mockedS3: AWS.S3;
+    let mockedS3: S3;
     let instance: S3Loader;
 
     beforeEach(() => {
-        mockedS3 = new AWS.S3();
+        mockedS3 = new S3();
         const mockedS3Factory = () => {
             return mockedS3;
         };

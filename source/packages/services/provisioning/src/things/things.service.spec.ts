@@ -13,6 +13,9 @@
 import 'reflect-metadata';
 
 import AWS from 'aws-sdk';
+import { IoT } from "@aws-sdk/client-iot";
+import { S3 } from "@aws-sdk/client-s3";
+import { SSM } from "@aws-sdk/client-ssm";
 import createMockInstance from 'jest-create-mock-instance';
 import { AttachAdditionalPoliciesProcessor } from './steps/attachAdditionalPoliciesProcessor';
 import { ClientIdEnforcementPolicyStepProcessor } from './steps/clientIdEnforcementPolicyStepProcessor';
@@ -22,8 +25,8 @@ import { RegisterDeviceCertificateWithoutCAStepProcessor } from './steps/registe
 import { UseACMPCAStepProcessor } from './steps/useACMPCAProcessor';
 import { ThingsService } from './things.service';
 
-let mockIot: AWS.Iot;
-let mockS3: AWS.S3;
+let mockIot: IoT;
+let mockS3: S3;
 let mockClientIdEnforcementPolicyStepProcessor: jest.Mocked<ClientIdEnforcementPolicyStepProcessor>;
 let mockCreateDeviceCertificateStepProcessor: jest.Mocked<CreateDeviceCertificateStepProcessor>;
 let mockCreateAwsCertiticateProcessor: jest.Mocked<CreateAwsCertiticateProcessor>;
@@ -34,8 +37,8 @@ let instance: ThingsService;
 
 describe('ThingsService', () => {
     beforeEach(() => {
-        mockIot = new AWS.Iot();
-        mockS3 = new AWS.S3();
+        mockIot = new IoT();
+        mockS3 = new S3();
         mockClientIdEnforcementPolicyStepProcessor = createMockInstance(
             ClientIdEnforcementPolicyStepProcessor
         );
@@ -51,7 +54,7 @@ describe('ThingsService', () => {
         );
 
         // SSM mock
-        const mockSSM = new AWS.SSM();
+        const mockSSM = new SSM();
         mockSSM.getParameter = jest.fn().mockImplementationOnce(() => {
             return {
                 promise: (): AWS.SSM.Types.GetParameterResult => null,

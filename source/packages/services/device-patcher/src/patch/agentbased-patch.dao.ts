@@ -10,7 +10,9 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions    *
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
-import AWS from 'aws-sdk';
+
+
+import { DocumentClient } from "@aws-sdk/client-dynamodb";
 import { inject, injectable } from 'inversify';
 
 import { logger } from '@awssolutions/simple-cdf-logger';
@@ -21,13 +23,13 @@ import { AssociationModel } from './patch.model';
 
 @injectable()
 export class AgentbasedPatchDao {
-    private dc: AWS.DynamoDB.DocumentClient;
+    private dc: DocumentClient;
     private readonly SI1_INDEX = 'sk-si1Sort-index';
     private readonly tableName = process.env.AWS_DYNAMODB_TABLE_NAME;
 
     constructor(
         @inject(TYPES.DocumentClientFactory)
-        documentClientFactory: () => AWS.DynamoDB.DocumentClient
+        documentClientFactory: () => DocumentClient
     ) {
         this.dc = documentClientFactory();
     }

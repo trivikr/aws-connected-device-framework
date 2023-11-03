@@ -11,7 +11,7 @@
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
 import { logger } from '@awssolutions/simple-cdf-logger';
-import AWS, { DynamoDB } from 'aws-sdk';
+import { DynamoDB } from "@aws-sdk/client-dynamodb";
 import { inject, injectable } from 'inversify';
 import ow from 'ow';
 import { TYPES } from '../di/types';
@@ -19,10 +19,10 @@ import { TaskStatus } from './certificatestask.models';
 
 @injectable()
 export class CertificatesDao {
-    private _dynamodb: AWS.DynamoDB;
+    private _dynamodb: DynamoDB;
 
     public constructor(
-        @inject(TYPES.DynamoDBFactory) dynamoFactory: () => AWS.DynamoDB,
+        @inject(TYPES.DynamoDBFactory) dynamoFactory: () => DynamoDB,
         @inject('aws.dynamodb.tasks.tableName') private tasksTable: string
     ) {
         this._dynamodb = dynamoFactory();

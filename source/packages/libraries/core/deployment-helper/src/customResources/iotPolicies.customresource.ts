@@ -13,7 +13,7 @@
 import { inject, injectable } from 'inversify';
 
 import { logger } from '@awssolutions/simple-cdf-logger';
-import AWS from 'aws-sdk';
+import { IoT, ListPolicyVersionsCommandOutput } from "@aws-sdk/client-iot";
 import ow from 'ow';
 import { TYPES } from '../di/types';
 import { CustomResource } from './customResource';
@@ -21,9 +21,9 @@ import { CustomResourceEvent } from './customResource.model';
 
 @injectable()
 export class IotPoliciesCustomResource implements CustomResource {
-    private _iot: AWS.Iot;
+    private _iot: IoT;
 
-    constructor(@inject(TYPES.IotFactory) iotFactory: () => AWS.Iot) {
+    constructor(@inject(TYPES.IotFactory) iotFactory: () => IoT) {
         this._iot = iotFactory();
     }
 
@@ -41,7 +41,7 @@ export class IotPoliciesCustomResource implements CustomResource {
         ow(policyDocument, ow.string.nonEmpty);
 
         // see how many policy versions we have.  max 5 allowed
-        let policies: AWS.Iot.ListPolicyVersionsResponse;
+        let policies: ListPolicyVersionsCommandOutput;
 
         try {
             policies = await this._iot

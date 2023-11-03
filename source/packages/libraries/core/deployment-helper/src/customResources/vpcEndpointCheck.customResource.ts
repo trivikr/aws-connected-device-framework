@@ -11,6 +11,7 @@
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
 import AWS from 'aws-sdk';
+import { EC2 } from "@aws-sdk/client-ec2";
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../di/types';
 import { CustomResource } from './customResource';
@@ -18,9 +19,9 @@ import { CustomResourceEvent } from './customResource.model';
 
 @injectable()
 export class VpcEndpointCheckCustomResource implements CustomResource {
-    private ec2: AWS.EC2;
+    private ec2: EC2;
 
-    constructor(@inject(TYPES.EC2Factory) ec2Factory: () => AWS.EC2) {
+    constructor(@inject(TYPES.EC2Factory) ec2Factory: () => EC2) {
         this.ec2 = ec2Factory();
     }
 

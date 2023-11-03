@@ -16,6 +16,7 @@ import ow from 'ow';
 
 import { logger } from '@awssolutions/simple-cdf-logger';
 import AWS from 'aws-sdk';
+import { CreateJobCommandInput, IoT } from "@aws-sdk/client-iot";
 import { CommandItem, JobDeliveryMethod } from '../../commands/commands.models';
 import { TYPES } from '../../di/types';
 import { MessagesDao } from '../messages.dao';
@@ -24,14 +25,14 @@ import { WorkflowPublishAction } from './workflow.publishAction';
 
 @injectable()
 export class JobAction extends WorkflowPublishAction {
-    private iot: AWS.Iot;
+    private iot: IoT;
 
     constructor(
         @inject('aws.accountId') private accountId: string,
         @inject('aws.region') private region: string,
         @inject('aws.s3.roleArn') private s3RoleArn: string,
         @inject(TYPES.MessagesDao) private messagesDao: MessagesDao,
-        @inject(TYPES.IotFactory) iotFactory: () => AWS.Iot
+        @inject(TYPES.IotFactory) iotFactory: () => IoT
     ) {
         super();
         this.iot = iotFactory();
@@ -67,7 +68,7 @@ export class JobAction extends WorkflowPublishAction {
 
         // create a new snapshot job
         const jobDeliveryMethod = command.deliveryMethod as JobDeliveryMethod;
-        const jobParams: AWS.Iot.CreateJobRequest = {
+        const jobParams: CreateJobCommandInput = {
             jobId: `cdf-cac-${message.id}`,
             targets: targetArns,
             document: JSON.stringify(msg),

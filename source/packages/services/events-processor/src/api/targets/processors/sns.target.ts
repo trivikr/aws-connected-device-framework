@@ -12,9 +12,9 @@
  *********************************************************************************************************************/
 import { logger } from '@awssolutions/simple-cdf-logger';
 import {
-    ListSubscriptionsByTopicInput,
-    ListSubscriptionsByTopicResponse,
-} from 'aws-sdk/clients/sns';
+    ListSubscriptionsByTopicCommandInput,
+    ListSubscriptionsByTopicCommandOutput,
+} from "@aws-sdk/client-sns";
 import { inject, injectable } from 'inversify';
 import ow from 'ow';
 import { TYPES } from '../../../di/types';
@@ -156,9 +156,9 @@ export class SNSTarget {
         logger.debug(`sns.target deleteTopic: exit:`);
     }
 
-    public async listSubscriptions(topicArn: string): Promise<ListSubscriptionsByTopicResponse> {
+    public async listSubscriptions(topicArn: string): Promise<ListSubscriptionsByTopicCommandOutput> {
         logger.debug(`sns.target listSubscriptions: in: topicArn:${topicArn}`);
-        const params: ListSubscriptionsByTopicInput = {
+        const params: ListSubscriptionsByTopicCommandInput = {
             TopicArn: topicArn,
         };
         const existing = await this._sns.listSubscriptionsByTopic(params).promise();

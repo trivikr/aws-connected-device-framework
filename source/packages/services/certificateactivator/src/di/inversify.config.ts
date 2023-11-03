@@ -23,6 +23,9 @@ import { TYPES } from './types';
 
 import AWS from 'aws-sdk';
 
+import { IoT } from "@aws-sdk/client-iot";
+import { S3 } from "@aws-sdk/client-s3";
+
 // Load everything needed to the Container
 export const container = new Container();
 
@@ -39,7 +42,9 @@ decorate(injectable(), AWS.Iot);
 container.bind<interfaces.Factory<AWS.Iot>>(TYPES.IotFactory).toFactory<AWS.Iot>(() => {
     return () => {
         if (!container.isBound(TYPES.Iot)) {
-            const iot = new AWS.Iot({ region: process.env.AWS_REGION });
+            const iot = new IoT({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.Iot>(TYPES.Iot).toConstantValue(iot);
         }
         return container.get<AWS.Iot>(TYPES.Iot);
@@ -51,7 +56,9 @@ decorate(injectable(), AWS.S3);
 container.bind<interfaces.Factory<AWS.S3>>(TYPES.S3Factory).toFactory<AWS.S3>(() => {
     return () => {
         if (!container.isBound(TYPES.S3)) {
-            const s3 = new AWS.S3({ region: process.env.AWS_REGION });
+            const s3 = new S3({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.S3>(TYPES.S3).toConstantValue(s3);
         }
         return container.get<AWS.S3>(TYPES.S3);

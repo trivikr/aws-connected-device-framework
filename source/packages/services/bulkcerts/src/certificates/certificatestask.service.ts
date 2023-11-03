@@ -11,7 +11,7 @@
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
 import { logger } from '@awssolutions/simple-cdf-logger';
-import AWS, { SNS } from 'aws-sdk';
+import { SNS } from "@aws-sdk/client-sns";
 import { inject, injectable } from 'inversify';
 import ow from 'ow';
 import { v1 as uuid } from 'uuid';
@@ -28,7 +28,7 @@ import {
 
 @injectable()
 export class CertificatesTaskService {
-    private _sns: AWS.SNS;
+    private _sns: SNS;
 
     public constructor(
         @inject('events.request.topic') private requestTopic: string,
@@ -44,7 +44,7 @@ export class CertificatesTaskService {
         @inject('defaults.chunkSize') private defaultChunkSize: number,
         @inject('deviceCertificateExpiryDays') private defaultDaysExpiry: number,
         @inject(TYPES.CertificatesTaskDao) private dao: CertificatesTaskDao,
-        @inject(TYPES.SNSFactory) snsFactory: () => AWS.SNS
+        @inject(TYPES.SNSFactory) snsFactory: () => SNS
     ) {
         this._sns = snsFactory();
     }

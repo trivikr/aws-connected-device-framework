@@ -12,7 +12,7 @@
  *********************************************************************************************************************/
 import { container } from './di/inversify.config';
 
-import { DeleteThingGroupRequest } from 'aws-sdk/clients/iot';
+import { DeleteThingGroupCommandInput } from "@aws-sdk/client-iot";
 import { CommandsService } from './commands/commands.service';
 import { TYPES } from './di/types';
 import { logger } from './utils/logger';
@@ -62,7 +62,7 @@ exports.job_lifecycle_rule_handler = async (
             const elements = target.split(':');
             if (elements[5] === `thinggroup/ephemeral-${command.commandId}`) {
                 // delete the ephemeral group
-                const params: DeleteThingGroupRequest = {
+                const params: DeleteThingGroupCommandInput = {
                     thingGroupName: target,
                 };
                 await iot.deleteThingGroup(params).promise();

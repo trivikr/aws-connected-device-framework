@@ -10,7 +10,10 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions    *
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
-import AWS from 'aws-sdk';
+
+
+import { any, BatchWriteCommandInput, QueryCommandInput, WriteRequest } from "@aws-sdk/lib-dynamodb";
+import { DocumentClient } from "@aws-sdk/client-dynamodb";
 import { inject, injectable } from 'inversify';
 
 import { logger } from '@awssolutions/simple-cdf-logger';
@@ -25,14 +28,14 @@ import { DynamoDbPaginationKey, PatchListPaginationKey } from './patchTask.dao';
 
 @injectable()
 export class PatchDao {
-    private dc: AWS.DynamoDB.DocumentClient;
+    private dc: DocumentClient;
     private readonly SI1_INDEX = 'sk-si1Sort-index';
     private readonly tableName = process.env.AWS_DYNAMODB_TABLE_NAME;
 
     constructor(
         @inject(TYPES.DynamoDbUtils) private dynamoDbUtils: DynamoDbUtils,
         @inject(TYPES.DocumentClientFactory)
-        documentClientFactory: () => AWS.DynamoDB.DocumentClient
+        documentClientFactory: () => DocumentClient
     ) {
         this.dc = documentClientFactory();
     }
@@ -76,7 +79,7 @@ export class PatchDao {
         // build out the items to batch write
         const requestItems = [];
         for (const patch of patches) {
-            const patchRecord: AWS.DynamoDB.DocumentClient.WriteRequest = {
+            const patchRecord: WriteRequest = {
                 PutRequest: {
                     Item: {
                         pk: createDelimitedAttribute(PkType.DevicePatch, patch.patchId),
@@ -109,7 +112,7 @@ export class PatchDao {
 
             requestItems.push(patchRecord);
 
-            const patchTaskRecord: AWS.DynamoDB.DocumentClient.WriteRequest = {
+            const patchTaskRecord: WriteRequest = {
                 PutRequest: {
                     Item: {
                         pk: createDelimitedAttribute(PkType.PatchTask, patch.taskId),
@@ -125,7 +128,7 @@ export class PatchDao {
 
         // batch write the items to ddb
         // build the request and write to DynamoDB
-        const params: AWS.DynamoDB.DocumentClient.BatchWriteItemInput = {
+        const params: BatchWriteCommandInput = {
             RequestItems: {},
         };
         params.RequestItems[this.tableName] = requestItems;
@@ -313,7 +316,7 @@ export class PatchDao {
         logger.debug(`patch.dao: delete: in: patch: ${JSON.stringify(patchId)}`);
 
         // retrieve all records associated with the template
-        const queryParams: AWS.DynamoDB.DocumentClient.QueryInput = {
+        const queryParams: QueryCommandInput = {
             TableName: this.tableName,
             KeyConditionExpression: `#hash = :hash`,
             ExpressionAttributeNames: { '#hash': 'pk' },
@@ -329,10 +332,10 @@ export class PatchDao {
         }
 
         // batch delete
-        const batchParams: AWS.DynamoDB.DocumentClient.BatchWriteItemInput = { RequestItems: {} };
+        const batchParams: BatchWriteCommandInput = { RequestItems: {} };
         batchParams.RequestItems[this.tableName] = [];
         queryResults.Items.forEach((i) => {
-            const req: AWS.DynamoDB.DocumentClient.WriteRequest = {
+            const req: WriteRequest = {
                 DeleteRequest: {
                     Key: {
                         pk: i.pk,
@@ -342,7 +345,7 @@ export class PatchDao {
             };
             batchParams.RequestItems[this.tableName].push(req);
 
-            const taskreq: AWS.DynamoDB.DocumentClient.WriteRequest = {
+            const taskreq: WriteRequest = {
                 DeleteRequest: {
                     Key: {
                         pk: createDelimitedAttribute(PkType.PatchTask, i.taskId),
@@ -361,7 +364,7 @@ export class PatchDao {
         logger.debug(`patch.dao delete: exit:`);
     }
 
-    private assemblePatch(items: AWS.DynamoDB.DocumentClient.ItemList): PatchItem[] {
+    private assemblePatch(items: Array<Record<string, any>>): PatchItem[] {
         const patches: { [patchId: string]: PatchItem } = {};
         const associations: { [patchId: string]: { associationId: string } } = {};
         for (const i of items) {

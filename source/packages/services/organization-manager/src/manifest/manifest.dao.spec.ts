@@ -12,15 +12,16 @@
  *********************************************************************************************************************/
 import 'reflect-metadata';
 
-import AWS from 'aws-sdk';
+import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
+import { DocumentClient, DynamoDB } from "@aws-sdk/client-dynamodb";
 import { ManifestDao } from './manifest.dao';
 
 describe('Templates Dao', () => {
-    let mockedDynamoDb: AWS.DynamoDB.DocumentClient;
+    let mockedDynamoDb: DocumentClient;
     let instance: ManifestDao;
 
     beforeEach(() => {
-        mockedDynamoDb = new AWS.DynamoDB.DocumentClient();
+        mockedDynamoDb = DynamoDBDocument.from(new DynamoDB());
         instance = new ManifestDao('fakeAccountsTable', () => mockedDynamoDb);
     });
 

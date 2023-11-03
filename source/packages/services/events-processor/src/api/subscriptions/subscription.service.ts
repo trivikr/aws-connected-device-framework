@@ -11,7 +11,7 @@
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
 import { logger } from '@awssolutions/simple-cdf-logger';
-import { ListSubscriptionsByTopicResponse } from 'aws-sdk/clients/sns';
+import { ListSubscriptionsByTopicCommandOutput } from "@aws-sdk/client-sns";
 import { inject, injectable } from 'inversify';
 import ow from 'ow';
 import pLimit from 'p-limit';
@@ -57,7 +57,7 @@ export class SubscriptionService {
         // within 72 hrs. If we know of any being in a pending state, double-check its status to see if
         // it has been confirmed or automatically deleted.
 
-        let existingSnsSubscriptions: ListSubscriptionsByTopicResponse;
+        let existingSnsSubscriptions: ListSubscriptionsByTopicCommandOutput;
         const targetTypes: TargetTypeStrings[] = ['email', 'sms'];
         for (const targetType of targetTypes) {
             const targets = subscription.targets?.[targetType] ?? [];

@@ -11,7 +11,8 @@
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
 import { logger } from '@awssolutions/simple-cdf-logger';
-import AWS from 'aws-sdk';
+import { any } from "@aws-sdk/lib-dynamodb";
+import { DocumentClient } from "@aws-sdk/client-dynamodb";
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../di/types';
 import { PkType, createDelimitedAttributePrefix } from '../utils/pkUtils.util';
@@ -19,18 +20,18 @@ import { AccountsByRegionListMap, RegionListByOrganizationalUnitMap } from './ma
 
 @injectable()
 export class ManifestDao {
-    private _dc: AWS.DynamoDB.DocumentClient;
+    private _dc: DocumentClient;
 
     public constructor(
         @inject('aws.dynamodb.tables.accounts') private accountsTable: string,
         @inject(TYPES.DocumentClientFactory)
-        documentClientFactory: () => AWS.DynamoDB.DocumentClient
+        documentClientFactory: () => DocumentClient
     ) {
         this._dc = documentClientFactory();
     }
 
     private static assembleOrganizationalUnitRegionItem(
-        result: AWS.DynamoDB.DocumentClient.ItemList
+        result: Array<Record<string, any>>
     ): AccountsByRegionListMap {
         logger.debug(
             `manifest.dao assembleOrganizationalUnitRegionItem: in: result: ${JSON.stringify(

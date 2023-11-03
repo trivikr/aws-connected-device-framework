@@ -14,6 +14,7 @@ import 'reflect-metadata';
 
 import { logger } from '@awssolutions/simple-cdf-logger';
 import AWS, { AWSError } from 'aws-sdk';
+import { PublishCommandOutput, SNS } from "@aws-sdk/client-sns";
 import { createMockInstance } from 'jest-create-mock-instance';
 import { CertificatesTaskDao } from './certificatestask.dao';
 import { CertificateInfo } from './certificatestask.models';
@@ -22,13 +23,13 @@ import { CertificatesTaskService } from './certificatestask.service';
 describe('CertificatesService', () => {
     let mockedCertificatesTaskDao: jest.Mocked<CertificatesTaskDao>;
     let instance: CertificatesTaskService;
-    let mockSNS: AWS.SNS;
+    let mockSNS: SNS;
 
     const testChunkSize = 50;
     const testDaysExpiry = 10;
 
     beforeEach(() => {
-        mockSNS = new AWS.SNS();
+        mockSNS = new SNS();
 
         const mockSNSFactory = () => {
             return mockSNS;
@@ -88,7 +89,7 @@ describe('CertificatesService', () => {
     };
 
     it('createTask with requested certs equally divisible into chunks', async () => {
-        const mockSnsPublishResponse: AWS.SNS.PublishResponse = {
+        const mockSnsPublishResponse: PublishCommandOutput = {
             MessageId: 'unit-test-publish-id',
         };
 
@@ -123,7 +124,7 @@ describe('CertificatesService', () => {
     });
 
     it('createTask with requested certs not equally divisible into chunks', async () => {
-        const mockSnsPublishResponse: AWS.SNS.PublishResponse = {
+        const mockSnsPublishResponse: PublishCommandOutput = {
             MessageId: 'unit-test-publish-id',
         };
 
@@ -158,7 +159,7 @@ describe('CertificatesService', () => {
     });
 
     it('createTask with sequentially generated CommonNames', async () => {
-        const mockSnsPublishResponse: AWS.SNS.PublishResponse = {
+        const mockSnsPublishResponse: PublishCommandOutput = {
             MessageId: 'unit-test-publish-id',
         };
 
@@ -195,7 +196,7 @@ describe('CertificatesService', () => {
     });
 
     it('createTask with List generated CommonNames', async () => {
-        const mockSnsPublishResponse: AWS.SNS.PublishResponse = {
+        const mockSnsPublishResponse: PublishCommandOutput = {
             MessageId: 'unit-test-publish-id',
         };
 
@@ -235,7 +236,7 @@ describe('CertificatesService', () => {
     });
 
     it('createTask with Static generated CommonNames', async () => {
-        const mockSnsPublishResponse: AWS.SNS.PublishResponse = {
+        const mockSnsPublishResponse: PublishCommandOutput = {
             MessageId: 'unit-test-publish-id',
         };
 

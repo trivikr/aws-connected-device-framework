@@ -11,7 +11,7 @@
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
 import * as Errors from '@awssolutions/cdf-errors';
-import AWS from 'aws-sdk';
+import { SSM } from "@aws-sdk/client-ssm";
 import * as pem from 'pem';
 import { promisify } from 'util';
 import { logger } from './utils/logger';
@@ -23,16 +23,18 @@ import { logger } from './utils/logger';
  */
 
 export class ApiGwCustomAuthorizer {
-    private _ssm: AWS.SSM;
+    private _ssm: SSM;
     private caCert: string;
 
     private _verifySigningChain = promisify(pem.verifySigningChain);
 
-    constructor(region: string, ssm?: AWS.SSM) {
+    constructor(region: string, ssm?: SSM) {
         if (ssm !== undefined) {
             this._ssm = ssm;
         } else {
-            this._ssm = new AWS.SSM({ region });
+            this._ssm = new SSM({
+                region
+            });
         }
     }
 
@@ -45,7 +47,7 @@ export class ApiGwCustomAuthorizer {
             Name: 'cdf-rootca-pem',
             WithDecryption: true,
         };
-        const res = await this._ssm.getParameter(params).promise();
+        const res = await this._ssm.getParameter(params);
         return res.Parameter?.Value;
     }
 

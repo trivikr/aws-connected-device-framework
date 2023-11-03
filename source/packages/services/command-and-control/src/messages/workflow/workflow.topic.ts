@@ -15,7 +15,7 @@ import { inject, injectable } from 'inversify';
 import ow from 'ow';
 
 import { logger } from '@awssolutions/simple-cdf-logger';
-import AWS from 'aws-sdk';
+import { IoTDataPlane } from "@aws-sdk/client-iot-data-plane";
 import { CommandItem, TopicDeliveryMethod } from '../../commands/commands.models';
 import { TYPES } from '../../di/types';
 import { MessagesDao } from '../messages.dao';
@@ -24,12 +24,12 @@ import { WorkflowPublishAction } from './workflow.publishAction';
 
 @injectable()
 export class TopicAction extends WorkflowPublishAction {
-    private iotData: AWS.IotData;
+    private iotData: IoTDataPlane;
 
     constructor(
         @inject('deliveryMethod.topic.mqttTopic') private topic: string,
         @inject(TYPES.MessagesDao) private messagesDao: MessagesDao,
-        @inject(TYPES.IotDataFactory) iotDataFactory: () => AWS.IotData
+        @inject(TYPES.IotDataFactory) iotDataFactory: () => IoTDataPlane
     ) {
         super();
         this.iotData = iotDataFactory();

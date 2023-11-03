@@ -21,7 +21,7 @@ import {
 } from '@awssolutions/cdf-provisioning-client';
 
 import { logger } from '@awssolutions/simple-cdf-logger';
-import { SendMessageResult } from 'aws-sdk/clients/sqs';
+import { SendMessageCommandOutput } from "@aws-sdk/client-sqs";
 import { CommandItem, JobDeliveryMethod } from '../../commands/commands.models';
 import { TYPES } from '../../di/types';
 import { MessagesDao } from '../messages.dao';
@@ -173,7 +173,7 @@ export class CreateEphemeralGroupAction extends WorkflowPublishAction {
     private async sqsSendMessage(
         message: MessageItem,
         command: CommandItem
-    ): Promise<SendMessageResult> {
+    ): Promise<SendMessageCommandOutput> {
         return this.sqs
             .sendMessage({
                 QueueUrl: this.messagesQueueUrl,

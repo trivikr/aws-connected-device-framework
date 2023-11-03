@@ -13,7 +13,8 @@
 
 import { Before, setDefaultTimeout } from '@cucumber/cucumber';
 
-import AWS from 'aws-sdk';
+import { IoT } from "@aws-sdk/client-iot";
+import { S3 } from "@aws-sdk/client-s3";
 setDefaultTimeout(30 * 1000);
 /*
     Cucumber describes current scenario context as “World”. It can be used to store the state of the scenario
@@ -27,8 +28,12 @@ const templateBucket = process.env.PROVISIONING_TEMPLATES_BUCKET;
 const templatePrefix = process.env.PROVISIONING_TEMPLATES_PREFIX;
 // const templateSuffix = config.get('provisioning.templates.suffix') as string;
 
-const s3 = new AWS.S3({ region: process.env.AWS_REGION });
-const iot = new AWS.Iot({ region: process.env.AWS_REGION });
+const s3 = new S3({
+    region: process.env.AWS_REGION
+});
+const iot = new IoT({
+    region: process.env.AWS_REGION
+});
 
 const BASIC_CSR_TEMPLATE_NAME = 'IntegrationTestTemplateWithCSR';
 
@@ -186,15 +191,15 @@ Before({ tags: '@teardown_acmpca_provisioning' }, async function () {
 async function deleteThing(thingName: string, policyName?: string) {
     let certificateId;
     try {
-        const thingPrincipals = await iot.listThingPrincipals({ thingName }).promise();
+        const thingPrincipals = await iot.listThingPrincipals({ thingName });
         const certArn = thingPrincipals.principals[0];
         certificateId = certArn?.split('/')[1];
 
         if (certArn && policyName) {
-            await iot.detachPrincipalPolicy({ principal: certArn, policyName }).promise();
+            await iot.detachPrincipalPolicy({ principal: certArn, policyName });
         }
         if (certArn) {
-            await iot.detachThingPrincipal({ thingName, principal: certArn }).promise();
+            await iot.detachThingPrincipal({ thingName, principal: certArn });
         }
     } catch (err) {
         if (err.code !== 'ResourceNotFoundException') {
@@ -204,8 +209,8 @@ async function deleteThing(thingName: string, policyName?: string) {
 
     try {
         if (certificateId !== undefined) {
-            await iot.updateCertificate({ certificateId, newStatus: 'INACTIVE' }).promise();
-            await iot.deleteCertificate({ certificateId }).promise();
+            await iot.updateCertificate({ certificateId, newStatus: 'INACTIVE' });
+            await iot.deleteCertificate({ certificateId });
         }
     } catch (err) {
         if (err.code !== 'ResourceNotFoundException') {
@@ -215,7 +220,7 @@ async function deleteThing(thingName: string, policyName?: string) {
 
     try {
         if (policyName) {
-            await iot.deletePolicy({ policyName }).promise();
+            await iot.deletePolicy({ policyName });
         }
     } catch (err) {
         if (err.code !== 'ResourceNotFoundException') {
@@ -224,7 +229,7 @@ async function deleteThing(thingName: string, policyName?: string) {
     }
 
     try {
-        await iot.deleteThing({ thingName }).promise();
+        await iot.deleteThing({ thingName });
     } catch (err) {
         if (err.code !== 'ResourceNotFoundException') {
             throw err;
@@ -239,7 +244,7 @@ async function uploadTemplate(name: string, template: unknown): Promise<void> {
         Key: `${templatePrefix}${name}.json`,
         Body: JSON.stringify(template),
     };
-    await s3.putObject(putObjectRequest).promise();
+    await s3.putObject(putObjectRequest);
 }
 
 async function deleteTemplate(name: string): Promise<void> {
@@ -247,13 +252,13 @@ async function deleteTemplate(name: string): Promise<void> {
         Bucket: templateBucket,
         Key: `${templatePrefix}${name}.json`,
     };
-    await s3.deleteObject(deleteObjectRequest).promise();
+    await s3.deleteObject(deleteObjectRequest);
 }
 
 async function createTestPolicy(policyName: string): Promise<void> {
     // create an IoT policy (if not exists)
     try {
-        await iot.getPolicy({ policyName }).promise();
+        await iot.getPolicy({ policyName });
     } catch (e) {
         if (e.name === 'ResourceNotFoundException') {
             const integrationTestPolicy = {
@@ -261,7 +266,7 @@ async function createTestPolicy(policyName: string): Promise<void> {
                 policyDocument:
                     '{"Version": "2012-10-17","Statement": [{"Effect": "Allow","Action": "iot:*","Resource": "*"}]}',
             };
-            await iot.createPolicy(integrationTestPolicy).promise();
+            await iot.createPolicy(integrationTestPolicy);
         }
     }
 }

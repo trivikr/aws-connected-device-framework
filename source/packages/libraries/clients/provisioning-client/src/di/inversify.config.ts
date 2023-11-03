@@ -21,6 +21,7 @@ import { ThingsLambdaService } from '../client/things.lambda.service';
 import { PROVISIONING_CLIENT_TYPES } from './types';
 
 import AWS from 'aws-sdk';
+import { Lambda } from "@aws-sdk/client-lambda";
 export const provisioningContainerModule = new ContainerModule(
     (
         bind: interfaces.Bind,
@@ -42,7 +43,9 @@ export const provisioningContainerModule = new ContainerModule(
                 ).toFactory<AWS.Lambda>((ctx: interfaces.Context) => {
                     return () => {
                         if (!isBound(LAMBDAINVOKE_TYPES.Lambda)) {
-                            const lambda = new AWS.Lambda({ region: process.env.AWS_REGION });
+                            const lambda = new Lambda({
+                                region: process.env.AWS_REGION
+                            });
                             bind<AWS.Lambda>(LAMBDAINVOKE_TYPES.Lambda).toConstantValue(lambda);
                         }
                         return ctx.container.get<AWS.Lambda>(LAMBDAINVOKE_TYPES.Lambda);

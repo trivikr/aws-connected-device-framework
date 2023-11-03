@@ -11,20 +11,21 @@
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
 import { logger } from '@awssolutions/simple-cdf-logger';
-import { Iot } from 'aws-sdk';
 
 import {
-    AttachThingPrincipalRequest,
-    DescribeCACertificateRequest,
-    DescribeCACertificateResponse,
-    GetEffectivePoliciesResponse,
-    ListAttachedPoliciesResponse,
-    ListPrincipalThingsResponse,
-    ListThingPrincipalsResponse,
-    RegisterCertificateRequest,
-    RegisterCertificateResponse,
-    UpdateCertificateRequest,
-} from 'aws-sdk/clients/iot';
+    AttachPolicyCommandInput,
+    AttachThingPrincipalCommandInput,
+    DescribeCACertificateCommandInput,
+    DescribeCACertificateCommandOutput,
+    GetEffectivePoliciesCommandOutput,
+    ListAttachedPoliciesCommandOutput,
+    ListPrincipalThingsCommandOutput,
+    ListThingPrincipalsCommandOutput,
+    RegisterCertificateCommandInput,
+    RegisterCertificateCommandOutput,
+    UpdateCertificateCommandInput,
+} from "@aws-sdk/client-iot";
+
 import { inject, injectable } from 'inversify';
 import ow from 'ow';
 import * as pem from 'pem';
@@ -320,7 +321,7 @@ export class CertificateService {
         logger.debug(
             `certificates.service activateCertificate: in: certificateId:${certificateId}`
         );
-        const params: UpdateCertificateRequest = {
+        const params: UpdateCertificateCommandInput = {
             certificateId,
             newStatus: 'ACTIVE',
         };
@@ -390,13 +391,13 @@ export class CertificateService {
 
     private async getCaCertificate(certificateId: string): Promise<string> {
         logger.debug(`certificates.service getCaCertificate: in: certificateId:${certificateId}`);
-        const params: DescribeCACertificateRequest = {
+        const params: DescribeCACertificateCommandInput = {
             certificateId,
         };
 
         let caCertificatePem: string;
         try {
-            const response: DescribeCACertificateResponse = await this.iot
+            const response: DescribeCACertificateCommandOutput = await this.iot
                 .describeCACertificate(params)
                 .promise();
             caCertificatePem = response.certificateDescription.certificatePem;
@@ -454,7 +455,7 @@ export class CertificateService {
         logger.debug(
             `certificates.service registerCertificate: in: ca: ${ca}, certificate:${certificate}`
         );
-        const params: RegisterCertificateRequest = {
+        const params: RegisterCertificateCommandInput = {
             caCertificatePem: ca,
             certificatePem: certificate,
             setAsActive: true,
@@ -462,7 +463,7 @@ export class CertificateService {
 
         let certificateArn;
         try {
-            const response: RegisterCertificateResponse = await this.iot
+            const response: RegisterCertificateCommandOutput = await this.iot
                 .registerCertificate(params)
                 .promise();
             certificateArn = response.certificateArn;
@@ -484,7 +485,7 @@ export class CertificateService {
         logger.debug(
             `certificates.service attachCertificateToThing: in: certificateArn: ${certificateArn}, deviceId:${deviceId}`
         );
-        const params: AttachThingPrincipalRequest = {
+        const params: AttachThingPrincipalCommandInput = {
             principal: certificateArn,
             thingName: deviceId,
         };
@@ -515,7 +516,7 @@ export class CertificateService {
             );
             const policies = await this.getEffectivePolicies(previousCertificateId);
             for (const policy of policies.effectivePolicies) {
-                const param: Iot.AttachPolicyRequest = {
+                const param: AttachPolicyCommandInput = {
                     target: certificateArn,
                     policyName: policy.policyName,
                 };
@@ -526,7 +527,7 @@ export class CertificateService {
             logger.debug(
                 `certificates.service attachPolicyToCertificate: Attaching the default policy`
             );
-            const param: Iot.AttachPolicyRequest = {
+            const param: AttachPolicyCommandInput = {
                 target: certificateArn,
                 policyName: policy,
             };
@@ -553,7 +554,7 @@ export class CertificateService {
         logger.debug(
             `certificates.service removePreviousCertificate: in: deviceId: ${deviceId}, certId:${certId}, previousCertificateId: ${previousCertificateId}`
         );
-        const thingPrincipals: ListThingPrincipalsResponse = await this.iot
+        const thingPrincipals: ListThingPrincipalsCommandOutput = await this.iot
             .listThingPrincipals({ thingName: deviceId })
             .promise();
         for (const principal of thingPrincipals.principals) {
@@ -567,14 +568,14 @@ export class CertificateService {
 
             await this.iot.detachThingPrincipal({ thingName: deviceId, principal }).promise();
 
-            const principalThings: ListPrincipalThingsResponse = await this.iot
+            const principalThings: ListPrincipalThingsCommandOutput = await this.iot
                 .listPrincipalThings({ principal })
                 .promise();
             // delete this cert if no longer attached to any things
             if (principalThings.things.length === 0) {
                 const certificateId = principal.split('/')[1];
                 const target = `arn:aws:iot:${this.region}:${this.accountId}:cert/${certificateId}`;
-                const principalPolicies: ListAttachedPoliciesResponse = await this.iot
+                const principalPolicies: ListAttachedPoliciesCommandOutput = await this.iot
                     .listAttachedPolicies({ target })
                     .promise();
                 for (const policy of principalPolicies.policies) {
@@ -592,7 +593,7 @@ export class CertificateService {
         logger.debug('certificates.service removePreviousCertificate: exit:');
     }
 
-    private async getEffectivePolicies(certId: string): Promise<GetEffectivePoliciesResponse> {
+    private async getEffectivePolicies(certId: string): Promise<GetEffectivePoliciesCommandOutput> {
         logger.debug(`certificates.service getEffectivePolicies: in: certId:${certId}`);
         const params = {
             principal: `arn:aws:iot:${this.region}:${this.accountId}:cert/${certId}`,

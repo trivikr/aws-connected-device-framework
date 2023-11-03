@@ -11,7 +11,8 @@
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
 import { logger } from '@awssolutions/simple-cdf-logger';
-import AWS from 'aws-sdk';
+import { IoT } from "@aws-sdk/client-iot";
+import { SSM } from "@aws-sdk/client-ssm";
 import { inject, injectable } from 'inversify';
 import ow from 'ow';
 import * as pem from 'pem';
@@ -23,13 +24,13 @@ import { ProvisioningStepProcessor } from './provisioningStepProcessor';
 
 @injectable()
 export class CreateDeviceCertificateStepProcessor implements ProvisioningStepProcessor {
-    private _iot: AWS.Iot;
-    private _ssm: AWS.SSM;
+    private _iot: IoT;
+    private _ssm: SSM;
 
     public constructor(
         @inject(TYPES.CertUtils) private certUtils: CertUtils,
-        @inject(TYPES.IotFactory) iotFactory: () => AWS.Iot,
-        @inject(TYPES.SSMFactory) ssmFactory: () => AWS.SSM,
+        @inject(TYPES.IotFactory) iotFactory: () => IoT,
+        @inject(TYPES.SSMFactory) ssmFactory: () => SSM,
         @inject('deviceCertificateExpiryDays') private defaultExpiryDays: number
     ) {
         this._iot = iotFactory();

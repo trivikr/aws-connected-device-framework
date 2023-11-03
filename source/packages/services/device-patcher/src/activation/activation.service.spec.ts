@@ -12,7 +12,8 @@
  *********************************************************************************************************************/
 import 'reflect-metadata';
 
-import AWS, { AWSError } from 'aws-sdk';
+import { AWSError } from 'aws-sdk';
+import { SSM } from "@aws-sdk/client-ssm";
 import { createMockInstance } from 'jest-create-mock-instance';
 
 import { ActivationDao } from './activation.dao';
@@ -21,11 +22,11 @@ import { ActivationService } from './activation.service';
 
 describe('ActivationService', () => {
     let mockedActivationDao: jest.Mocked<ActivationDao>;
-    let mockedSSM: AWS.SSM;
+    let mockedSSM: SSM;
     let instance: ActivationService;
 
     beforeEach(() => {
-        mockedSSM = new AWS.SSM();
+        mockedSSM = new SSM();
         const mockedSSMFactory = () => {
             return mockedSSM;
         };

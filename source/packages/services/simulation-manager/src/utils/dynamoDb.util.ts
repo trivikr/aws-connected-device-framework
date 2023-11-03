@@ -10,6 +10,8 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions    *
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
+// Transformation of DocumentClient named import from deep path is unsupported in aws-sdk-js-codemod.
+// Please convert to a default import, and re-run aws-sdk-js-codemod.
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../di/types';

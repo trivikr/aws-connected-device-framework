@@ -10,7 +10,9 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions    *
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
-import * as AWS from 'aws-sdk';
+
+
+import { InvokeCommandInput, InvokeCommandOutput, Lambda } from "@aws-sdk/client-lambda";
 
 import createHttpError from 'http-errors';
 import { inject, injectable } from 'inversify';
@@ -25,9 +27,9 @@ import {
 
 @injectable()
 export class LambdaInvokerService {
-    private lambda: AWS.Lambda;
+    private lambda: Lambda;
 
-    public constructor(@inject(LAMBDAINVOKE_TYPES.LambdaFactory) lambdaFactory: () => AWS.Lambda) {
+    public constructor(@inject(LAMBDAINVOKE_TYPES.LambdaFactory) lambdaFactory: () => Lambda) {
         this.lambda = lambdaFactory();
     }
 
@@ -38,13 +40,13 @@ export class LambdaInvokerService {
             )}`
         );
 
-        const invokeRequest: AWS.Lambda.InvocationRequest = {
+        const invokeRequest: InvokeCommandInput = {
             FunctionName: functionName,
             InvocationType: 'RequestResponse',
             Payload: JSON.stringify(apiEvent),
         };
 
-        const invokeResponse: AWS.Lambda.InvocationResponse = await this.lambda
+        const invokeResponse: InvokeCommandOutput = await this.lambda
             .invoke(invokeRequest)
             .promise();
         logger.silly(

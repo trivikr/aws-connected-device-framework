@@ -10,7 +10,10 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions    *
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
-import AWS from 'aws-sdk';
+
+
+import { any, BatchWriteCommandInput, WriteRequest } from "@aws-sdk/lib-dynamodb";
+import { DocumentClient } from "@aws-sdk/client-dynamodb";
 import { inject, injectable } from 'inversify';
 
 import { logger } from '@awssolutions/simple-cdf-logger';
@@ -22,14 +25,14 @@ import { ActivationItem, ActivationItemList } from './activation.model';
 
 @injectable()
 export class ActivationDao {
-    private dc: AWS.DynamoDB.DocumentClient;
+    private dc: DocumentClient;
     private readonly SI1_INDEX = 'sk-si1Sort-index';
     private readonly tableName = process.env.AWS_DYNAMODB_TABLE_NAME;
 
     constructor(
         @inject(TYPES.DynamoDbUtils) private dynamoDbUtils: DynamoDbUtils,
         @inject(TYPES.DocumentClientFactory)
-        documentClientFactory: () => AWS.DynamoDB.DocumentClient
+        documentClientFactory: () => DocumentClient
     ) {
         this.dc = documentClientFactory();
     }
@@ -95,10 +98,10 @@ export class ActivationDao {
         }
 
         // batch delete
-        const batchParams: AWS.DynamoDB.DocumentClient.BatchWriteItemInput = { RequestItems: {} };
+        const batchParams: BatchWriteCommandInput = { RequestItems: {} };
         batchParams.RequestItems[this.tableName] = [];
         queryResults.Items.forEach((i) => {
-            const req: AWS.DynamoDB.DocumentClient.WriteRequest = {
+            const req: WriteRequest = {
                 DeleteRequest: {
                     Key: {
                         pk: i.pk,
@@ -178,7 +181,7 @@ export class ActivationDao {
         return activationList.activations[0];
     }
 
-    private assemble(items: AWS.DynamoDB.DocumentClient.ItemList): ActivationItemList {
+    private assemble(items: Array<Record<string, any>>): ActivationItemList {
         const list = new ActivationItemList();
 
         for (const i of items) {

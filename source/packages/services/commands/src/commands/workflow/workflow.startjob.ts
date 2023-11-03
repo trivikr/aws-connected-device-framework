@@ -38,10 +38,12 @@ import { CommandsValidator } from '../commands.validator';
 import { WorkflowAction } from './workflow.interfaces';
 
 import AWS from 'aws-sdk';
+import { CreateJobCommandInput, IoT } from "@aws-sdk/client-iot";
+import { S3 } from "@aws-sdk/client-s3";
 @injectable()
 export class StartJobAction implements WorkflowAction {
-    private _iot: AWS.Iot;
-    private _s3: AWS.S3;
+    private _iot: IoT;
+    private _s3: S3;
 
     constructor(
         @inject(TYPES.CommandsValidator) private commandsValidator: CommandsValidator,
@@ -58,8 +60,8 @@ export class StartJobAction implements WorkflowAction {
         @inject('aws.s3.prefix') private s3Prefix: string,
         @inject('aws.s3.roleArn') private s3RoleArn: string,
         @inject('aws.jobs.maxTargets') private maxTargets: number,
-        @inject(TYPES.S3Factory) s3Factory: () => AWS.S3,
-        @inject(TYPES.IotFactory) iotFactory: () => AWS.Iot
+        @inject(TYPES.S3Factory) s3Factory: () => S3,
+        @inject(TYPES.IotFactory) iotFactory: () => IoT
     ) {
         this._iot = iotFactory();
         this._s3 = s3Factory();
@@ -423,13 +425,13 @@ export class StartJobAction implements WorkflowAction {
         jobTargets: string[],
         template: TemplateModel,
         command: CommandModel
-    ): AWS.Iot.CreateJobRequest {
+    ): CreateJobCommandInput {
         logger.debug(
             `workflow.startjob assembleCreateJobRequest: in: jobTargets:${JSON.stringify(
                 jobTargets
             )}, template:${JSON.stringify(template)}, command:${JSON.stringify(jobTargets)}`
         );
-        const params: AWS.Iot.CreateJobRequest = {
+        const params: CreateJobCommandInput = {
             jobId: `cdf-${command.commandId}`,
             targets: jobTargets,
             document: template.document,

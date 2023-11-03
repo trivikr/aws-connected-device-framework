@@ -12,8 +12,7 @@
  *********************************************************************************************************************/
 import 'reflect-metadata';
 
-import AWS from 'aws-sdk';
-import { CreateOrganizationalUnitRequest } from 'aws-sdk/clients/organizations';
+import { CreateOrganizationalUnitCommandInput, Organizations } from "@aws-sdk/client-organizations";
 import { createMockInstance } from 'jest-create-mock-instance';
 import { AccountsDao } from '../accounts/accounts.dao';
 import { OrganizationalUnitsAssembler } from './organizationalUnits.assembler';
@@ -23,7 +22,7 @@ import { OrganizationalUnitsService } from './organizationalUnits.service';
 
 describe('OrganizationalUnitService', function () {
     let instance: OrganizationalUnitsService;
-    let mockedOrganizations: AWS.Organizations;
+    let mockedOrganizations: Organizations;
     let mockedOrganizationalUnitsDao: OrganizationalUnitsDao;
     let mockAccountsDao: AccountsDao;
     const fakeRootId = { Id: 'fakeRootId' };
@@ -35,7 +34,7 @@ describe('OrganizationalUnitService', function () {
     };
 
     beforeEach(() => {
-        mockedOrganizations = new AWS.Organizations();
+        mockedOrganizations = new Organizations();
         mockedOrganizations.listRoots = jest
             .fn()
             .mockReturnValueOnce({ promise: () => Promise.resolve({ Roots: [] }) });
@@ -68,7 +67,7 @@ describe('OrganizationalUnitService', function () {
 
         await instance.createOrganizationalUnit(createOrganizationalUnitInput);
 
-        const createOrganizationalUnitRequest: CreateOrganizationalUnitRequest =
+        const createOrganizationalUnitRequest: CreateOrganizationalUnitCommandInput =
             mockCreateOrganizationalUnit.mock.calls[0][0];
 
         expect(createOrganizationalUnitRequest.ParentId).toBe('fakeRootId');

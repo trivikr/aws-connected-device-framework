@@ -16,6 +16,11 @@ import '@awssolutions/cdf-config-inject';
 
 import AWS from 'aws-sdk';
 
+import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
+import { DynamoDB } from "@aws-sdk/client-dynamodb";
+import { S3 } from "@aws-sdk/client-s3";
+import { SNS } from "@aws-sdk/client-sns";
+
 import { Container, decorate, injectable, interfaces } from 'inversify';
 
 import '../runs/runs.controller';
@@ -47,9 +52,12 @@ container
     .toFactory<AWS.DynamoDB.DocumentClient>(() => {
         return () => {
             if (!container.isBound(TYPES.DocumentClient)) {
-                const dc = new AWS.DynamoDB.DocumentClient({
-                    region: process.env.AWS_REGION,
-                    convertEmptyValues: true,
+                const dc = DynamoDBDocument.from(new DynamoDB({
+                    region: process.env.AWS_REGION
+                }), {
+                    marshallOptions: {
+                        convertEmptyValues: true
+                    }
                 });
                 container
                     .bind<AWS.DynamoDB.DocumentClient>(TYPES.DocumentClient)
@@ -64,7 +72,9 @@ decorate(injectable(), AWS.SNS);
 container.bind<interfaces.Factory<AWS.SNS>>(TYPES.SNSFactory).toFactory<AWS.SNS>(() => {
     return () => {
         if (!container.isBound(TYPES.SNS)) {
-            const sns = new AWS.SNS({ region: process.env.AWS_REGION });
+            const sns = new SNS({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.SNS>(TYPES.SNS).toConstantValue(sns);
         }
         return container.get<AWS.SNS>(TYPES.SNS);
@@ -76,7 +86,9 @@ decorate(injectable(), AWS.S3);
 container.bind<interfaces.Factory<AWS.S3>>(TYPES.S3Factory).toFactory<AWS.S3>(() => {
     return () => {
         if (!container.isBound(TYPES.S3)) {
-            const s3 = new AWS.S3({ region: process.env.AWS_REGION });
+            const s3 = new S3({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.S3>(TYPES.S3).toConstantValue(s3);
         }
         return container.get<AWS.S3>(TYPES.S3);

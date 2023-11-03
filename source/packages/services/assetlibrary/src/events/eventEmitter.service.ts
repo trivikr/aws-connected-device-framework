@@ -15,13 +15,13 @@ import { inject, injectable } from 'inversify';
 import { logger } from '@awssolutions/simple-cdf-logger';
 import { TYPES } from '../di/types';
 
-import AWS from 'aws-sdk';
+import { IoTDataPlane } from "@aws-sdk/client-iot-data-plane";
 
 @injectable()
 export class EventEmitter {
-    private _iotData: AWS.IotData;
+    private _iotData: IoTDataPlane;
 
-    public constructor(@inject(TYPES.IotDataFactory) iotDataFactory: () => AWS.IotData) {
+    public constructor(@inject(TYPES.IotDataFactory) iotDataFactory: () => IoTDataPlane) {
         this._iotData = iotDataFactory();
     }
 

@@ -10,7 +10,10 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions    *
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
-import AWS from 'aws-sdk';
+
+
+import { any, BatchWriteCommandInput, QueryCommandInput, WriteRequest } from "@aws-sdk/lib-dynamodb";
+import { DocumentClient } from "@aws-sdk/client-dynamodb";
 import { inject, injectable } from 'inversify';
 
 import { logger } from '@awssolutions/simple-cdf-logger';
@@ -25,12 +28,12 @@ export class PatchTemplatesDao {
     private readonly SI1_INDEX = 'sk-si1Sort-index';
     private readonly tableName = process.env.AWS_DYNAMODB_TABLE_NAME;
 
-    private dc: AWS.DynamoDB.DocumentClient;
+    private dc: DocumentClient;
 
     constructor(
         @inject(TYPES.DynamoDbUtils) private dynamoDbUtils: DynamoDbUtils,
         @inject(TYPES.DocumentClientFactory)
-        documentClientFactory: () => AWS.DynamoDB.DocumentClient
+        documentClientFactory: () => DocumentClient
     ) {
         this.dc = documentClientFactory();
     }
@@ -41,7 +44,7 @@ export class PatchTemplatesDao {
         const templateDbId = createDelimitedAttribute(PkType.PatchTemplate, template.name);
 
         // create/update the current version record
-        const currentRecord: AWS.DynamoDB.DocumentClient.WriteRequest = {
+        const currentRecord: WriteRequest = {
             PutRequest: {
                 Item: {
                     pk: templateDbId,
@@ -66,7 +69,7 @@ export class PatchTemplatesDao {
         };
 
         // create the version record
-        const versionRecord: AWS.DynamoDB.DocumentClient.WriteRequest = {
+        const versionRecord: WriteRequest = {
             PutRequest: {
                 Item: {
                     pk: templateDbId,
@@ -79,7 +82,7 @@ export class PatchTemplatesDao {
         };
 
         // build the request and write to DynamoDB
-        const params: AWS.DynamoDB.DocumentClient.BatchWriteItemInput = {
+        const params: BatchWriteCommandInput = {
             RequestItems: {},
         };
         params.RequestItems[this.tableName] = [versionRecord, currentRecord];
@@ -145,7 +148,7 @@ export class PatchTemplatesDao {
             };
         }
 
-        const params: AWS.DynamoDB.DocumentClient.QueryInput = {
+        const params: QueryCommandInput = {
             TableName: this.tableName,
             IndexName: this.SI1_INDEX,
             KeyConditionExpression: `#hash = :hash`,
@@ -187,7 +190,7 @@ export class PatchTemplatesDao {
         logger.debug(`templates.dao delete: in: name: ${name}`);
 
         // retrieve all records associated with the template
-        const queryParams: AWS.DynamoDB.DocumentClient.QueryInput = {
+        const queryParams: QueryCommandInput = {
             TableName: this.tableName,
             KeyConditionExpression: `#hash = :hash`,
             ExpressionAttributeNames: { '#hash': 'pk' },
@@ -203,10 +206,10 @@ export class PatchTemplatesDao {
         }
 
         // batch delete
-        const batchParams: AWS.DynamoDB.DocumentClient.BatchWriteItemInput = { RequestItems: {} };
+        const batchParams: BatchWriteCommandInput = { RequestItems: {} };
         batchParams.RequestItems[this.tableName] = [];
         queryResults.Items.forEach((i) => {
-            const req: AWS.DynamoDB.DocumentClient.WriteRequest = {
+            const req: WriteRequest = {
                 DeleteRequest: {
                     Key: {
                         pk: i.pk,
@@ -226,7 +229,7 @@ export class PatchTemplatesDao {
     }
 
     private assembleTemplateList(
-        items: AWS.DynamoDB.DocumentClient.ItemList
+        items: Array<Record<string, any>>
     ): PatchTemplateItem[] {
         logger.debug(`templates.dao assembleTemplate: items: ${JSON.stringify(items)}`);
 

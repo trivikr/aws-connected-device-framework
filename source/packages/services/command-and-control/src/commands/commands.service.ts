@@ -19,7 +19,7 @@ import ShortUniqueId from 'short-unique-id';
 
 import { logger } from '@awssolutions/simple-cdf-logger';
 import AWS from 'aws-sdk';
-import { SendMessageResult } from 'aws-sdk/clients/sqs';
+import { SendMessageCommandOutput, SQS } from "@aws-sdk/client-sqs";
 import { TYPES } from '../di/types';
 import { MessageItem, MessageListPaginationKey } from '../messages/messages.models';
 import { MessagesService } from '../messages/messages.service';
@@ -37,7 +37,7 @@ export class CommandsService {
     private MAX_LIST_RESULTS = 20;
 
     private readonly uidGenerator: ShortUniqueId;
-    private sqs: AWS.SQS;
+    private sqs: SQS;
 
     constructor(
         @inject('promises.concurrency') private promisesConcurrency: number,
@@ -45,7 +45,7 @@ export class CommandsService {
         @inject(TYPES.CommandsValidator) private validator: CommandsValidator,
         @inject(TYPES.CommandsDao) private commandDao: CommandsDao,
         @inject(TYPES.MessagesService) private messagesService: MessagesService,
-        @inject(TYPES.SQSFactory) sqsFactory: () => AWS.SQS
+        @inject(TYPES.SQSFactory) sqsFactory: () => SQS
     ) {
         this.sqs = sqsFactory();
 
@@ -331,7 +331,7 @@ export class CommandsService {
         logger.debug(`commands.service processCommandDeletion: exit:`);
     }
 
-    private async sqsSendCommandForDeletion(commandId: string): Promise<SendMessageResult> {
+    private async sqsSendCommandForDeletion(commandId: string): Promise<SendMessageCommandOutput> {
         const params: AWS.SQS.Types.SendMessageRequest = {
             QueueUrl: this.commandsQueueUrl,
             MessageBody: JSON.stringify({

@@ -16,6 +16,13 @@ import 'reflect-metadata';
 
 import AWS from 'aws-sdk';
 
+import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
+import { DynamoDB } from "@aws-sdk/client-dynamodb";
+import { S3 } from "@aws-sdk/client-s3";
+import { SNS } from "@aws-sdk/client-sns";
+import { SQS } from "@aws-sdk/client-sqs";
+import { SSM } from "@aws-sdk/client-ssm";
+
 import { HttpHeaderUtils } from '../utils/httpHeaders';
 import { TYPES } from './types';
 
@@ -106,9 +113,12 @@ container
     .toFactory<AWS.DynamoDB.DocumentClient>(() => {
         return () => {
             if (!container.isBound(TYPES.DocumentClient)) {
-                const dc = new AWS.DynamoDB.DocumentClient({
-                    region: process.env.AWS_REGION,
-                    convertEmptyValues: true,
+                const dc = DynamoDBDocument.from(new DynamoDB({
+                    region: process.env.AWS_REGION
+                }), {
+                    marshallOptions: {
+                        convertEmptyValues: true
+                    }
                 });
                 container
                     .bind<AWS.DynamoDB.DocumentClient>(TYPES.DocumentClient)
@@ -123,7 +133,9 @@ decorate(injectable(), AWS.SNS);
 container.bind<interfaces.Factory<AWS.SNS>>(TYPES.SNSFactory).toFactory<AWS.SNS>(() => {
     return () => {
         if (!container.isBound(TYPES.SNS)) {
-            const sns = new AWS.SNS({ region: process.env.AWS_REGION });
+            const sns = new SNS({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.SNS>(TYPES.SNS).toConstantValue(sns);
         }
         return container.get<AWS.SNS>(TYPES.SNS);
@@ -137,7 +149,9 @@ decorate(injectable(), AWS.S3);
 container.bind<interfaces.Factory<AWS.S3>>(TYPES.S3Factory).toFactory<AWS.S3>(() => {
     return () => {
         if (!container.isBound(TYPES.S3)) {
-            const s3 = new AWS.S3({ region: process.env.AWS_REGION });
+            const s3 = new S3({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.S3>(TYPES.S3).toConstantValue(s3);
         }
         return container.get<AWS.S3>(TYPES.S3);
@@ -149,7 +163,9 @@ decorate(injectable(), AWS.SSM);
 container.bind<interfaces.Factory<AWS.SSM>>(TYPES.SSMFactory).toFactory<AWS.SSM>(() => {
     return () => {
         if (!container.isBound(TYPES.SSM)) {
-            const ssm = new AWS.SSM({ region: process.env.AWS_REGION });
+            const ssm = new SSM({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.SSM>(TYPES.SSM).toConstantValue(ssm);
         }
         return container.get<AWS.SSM>(TYPES.SSM);
@@ -161,7 +177,9 @@ decorate(injectable(), AWS.SQS);
 container.bind<interfaces.Factory<AWS.SQS>>(TYPES.SQSFactory).toFactory<AWS.SQS>(() => {
     return () => {
         if (!container.isBound(TYPES.SQS)) {
-            const sqs = new AWS.SQS({ region: process.env.AWS_REGION });
+            const sqs = new SQS({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.SQS>(TYPES.SQS).toConstantValue(sqs);
         }
         return container.get<AWS.SQS>(TYPES.SQS);

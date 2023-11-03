@@ -11,7 +11,7 @@
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
 import { logger } from '@awssolutions/simple-cdf-logger';
-import { PutObjectRequest } from 'aws-sdk/clients/s3';
+import { PutObjectCommandInput } from "@aws-sdk/client-s3";
 import { inject, injectable } from 'inversify';
 import yaml from 'js-yaml';
 import JSZip from 'jszip';
@@ -95,7 +95,7 @@ export class ManifestService {
             `manifest.service uploadStreamToS3: in: bucket: ${this.bucket} key: ${configurationKey}`
         );
         return new Promise((resolve, reject) => {
-            const params: PutObjectRequest = {
+            const params: PutObjectCommandInput = {
                 ACL: 'bucket-owner-full-control',
                 Bucket: this.bucket,
                 Key: configurationKey,

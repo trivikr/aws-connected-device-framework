@@ -11,7 +11,6 @@
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
 import { logger } from '@awssolutions/simple-cdf-logger';
-import { Iot } from 'aws-sdk';
 import { inject, injectable } from 'inversify';
 import { NodeAssembler } from '../data/assembler';
 import { Node } from '../data/node';

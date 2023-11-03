@@ -26,7 +26,7 @@ import {
 import { Dictionary } from '../../../../libraries/core/lambda-invoke/src';
 import { AUTHORIZATION_TOKEN, replaceTokens, RESPONSE_STATUS } from '../common/common.steps';
 
-import AWS from 'aws-sdk';
+import { IoT } from "@aws-sdk/client-iot";
 export const COMMAND_ID = 'commandId';
 export const COMMAND_DETAILS = 'commandDetails';
 /*
@@ -46,7 +46,9 @@ function getAdditionalHeaders(world: unknown): Dictionary {
     };
 }
 
-const iot: AWS.Iot = new AWS.Iot({ region: process.env.AWS_REGION });
+const iot: IoT = new IoT({
+    region: process.env.AWS_REGION
+});
 
 function buildCommandModel(data: DataTable) {
     const d = data.rowsHash();
@@ -184,7 +186,7 @@ Then('job for last command exists', async function () {
         expect(commandId).equals(command.commandId);
         this[COMMAND_DETAILS] = command;
 
-        const job = await iot.describeJob({ jobId: command.jobId }).promise();
+        const job = await iot.describeJob({ jobId: command.jobId });
         expect(command.jobId).equals(job.job.jobId);
     } catch (err) {
         this[RESPONSE_STATUS] = err.status;

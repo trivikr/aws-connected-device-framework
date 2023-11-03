@@ -12,14 +12,15 @@
  *********************************************************************************************************************/
 import { logger } from '@awssolutions/simple-cdf-logger';
 import AWS from 'aws-sdk';
+import { SNS } from "@aws-sdk/client-sns";
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../di/types';
 
 @injectable()
 export class SNSTarget {
-    private _sns: AWS.SNS;
+    private _sns: SNS;
 
-    public constructor(@inject(TYPES.SNSFactory) snsFactory: () => AWS.SNS) {
+    public constructor(@inject(TYPES.SNSFactory) snsFactory: () => SNS) {
         this._sns = snsFactory();
     }
 

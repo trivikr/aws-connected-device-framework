@@ -13,6 +13,8 @@
 import 'reflect-metadata';
 
 import AWS from 'aws-sdk';
+// Transformation of DocumentClient named import from deep path is unsupported in aws-sdk-js-codemod.
+// Please convert to a default import, and re-run aws-sdk-js-codemod.
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { createMockInstance } from 'jest-create-mock-instance';
 import { DynamoDbUtils } from '../../utils/dynamoDb.util';

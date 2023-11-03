@@ -12,7 +12,7 @@
  *********************************************************************************************************************/
 
 import { logger } from '@awssolutions/simple-cdf-logger';
-import { Tag, Tags } from 'aws-sdk/clients/organizations';
+import { Tag } from "@aws-sdk/client-organizations";
 import { inject, injectable } from 'inversify';
 import ow from 'ow';
 import { AccountsDao } from '../accounts/accounts.dao';
@@ -59,7 +59,7 @@ export class OrganizationalUnitsService {
             throw new Error('root cannot be found in current organizations');
         }
 
-        const createTagsRequest: Tags = [];
+        const createTagsRequest: Array<Tag> = [];
 
         for (const [key, value] of Object.entries(tags)) {
             createTagsRequest.push({

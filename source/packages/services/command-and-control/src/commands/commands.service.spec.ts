@@ -13,7 +13,7 @@
 
 import 'reflect-metadata';
 
-import { SQS } from 'aws-sdk';
+import { SQS } from "@aws-sdk/client-sqs";
 import { createMockInstance } from 'jest-create-mock-instance';
 
 import { MessagesService } from '../messages/messages.service';

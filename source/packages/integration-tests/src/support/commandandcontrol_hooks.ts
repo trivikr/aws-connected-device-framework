@@ -25,7 +25,7 @@ import { container } from '../di/inversify.config';
 import { listCommands } from '../step_definitions/commandandcontrol/commands.steps';
 import { AUTHORIZATION_TOKEN } from '../step_definitions/common/common.steps';
 
-import AWS from 'aws-sdk';
+import { IoT } from "@aws-sdk/client-iot";
 import {
     CommandAndControlProvisioningWorld,
     world,
@@ -48,7 +48,9 @@ function getAdditionalHeaders(world: unknown): Dictionary {
     };
 }
 
-const iot = new AWS.Iot({ region: process.env.AWS_REGION });
+const iot = new IoT({
+    region: process.env.AWS_REGION
+});
 const commandsService: CommandsService = container.get(
     COMMANDANDCONTROL_CLIENT_TYPES.CommandsService
 );
@@ -70,8 +72,7 @@ async function createThing(thingName: string): Promise<void> {
     const rc = await iot
         .createKeysAndCertificate({
             setAsActive: true,
-        })
-        .promise();
+        });
 
     const tmpCertDir = path.join(os.tmpdir(), 'cac-certs');
     if (!fs.existsSync(tmpCertDir)) {
@@ -88,8 +89,7 @@ async function createThing(thingName: string): Promise<void> {
         await iot
             .deletePolicy({
                 policyName: process.env.COMMANDANDCONTROL_TESTDEVICE_POLICYNAME,
-            })
-            .promise();
+            });
     } catch (e) {
         //ignore
     }
@@ -98,8 +98,7 @@ async function createThing(thingName: string): Promise<void> {
         await iot
             .getPolicy({
                 policyName: process.env.COMMANDANDCONTROL_TESTDEVICE_POLICYNAME,
-            })
-            .promise();
+            });
     } catch (e) {
         let policyDocument = process.env.COMMANDANDCONTROL_TESTDEVICE_POLICYDOCUMENT;
         policyDocument = policyDocument.split('${AWS_REGION}').join(process.env.AWS_REGION);
@@ -109,38 +108,34 @@ async function createThing(thingName: string): Promise<void> {
             .createPolicy({
                 policyName: process.env.COMMANDANDCONTROL_TESTDEVICE_POLICYNAME,
                 policyDocument,
-            })
-            .promise();
+            });
     }
 
     await iot
         .attachPrincipalPolicy({
             policyName: process.env.COMMANDANDCONTROL_TESTDEVICE_POLICYNAME,
             principal: rc.certificateArn,
-        })
-        .promise();
+        });
 
     const rt = await iot
         .createThing({
             thingName,
-        })
-        .promise();
+        });
 
     await iot
         .attachThingPrincipal({
             thingName: rt.thingName,
             principal: rc.certificateArn,
-        })
-        .promise();
+        });
 }
 
 async function deleteThing(thingName: string) {
     try {
-        const jobs = await iot.listJobExecutionsForThing({ thingName }).promise();
+        const jobs = await iot.listJobExecutionsForThing({ thingName });
         if ((jobs?.executionSummaries?.length ?? 0) > 0) {
             jobs.executionSummaries.forEach(async (job) => {
                 try {
-                    await iot.deleteJob({ jobId: job.jobId, force: true }).promise();
+                    await iot.deleteJob({ jobId: job.jobId, force: true });
                 } catch (e) {
                     // ignore
                 }
@@ -152,22 +147,21 @@ async function deleteThing(thingName: string) {
 
     let certificateId;
     try {
-        const thingPrincipals = await iot.listThingPrincipals({ thingName }).promise();
+        const thingPrincipals = await iot.listThingPrincipals({ thingName });
         const certArn = thingPrincipals.principals[0];
         certificateId = certArn.split('/')[1];
 
-        const policies = await iot.listPrincipalPolicies({ principal: certArn }).promise();
+        const policies = await iot.listPrincipalPolicies({ principal: certArn });
         policies.policies.forEach(async (policy) => {
             await iot
-                .detachPrincipalPolicy({ principal: certArn, policyName: policy.policyName })
-                .promise();
+                .detachPrincipalPolicy({ principal: certArn, policyName: policy.policyName });
             try {
-                await iot.deletePolicy({ policyName: policy.policyName }).promise();
+                await iot.deletePolicy({ policyName: policy.policyName });
             } catch (e) {
                 // ignore
             }
         });
-        await iot.detachThingPrincipal({ thingName, principal: certArn }).promise();
+        await iot.detachThingPrincipal({ thingName, principal: certArn });
     } catch (e) {
         if (e.code !== 'ResourceNotFoundException') {
             throw e;
@@ -177,7 +171,7 @@ async function deleteThing(thingName: string) {
 
     try {
         if (certificateId !== undefined) {
-            await iot.updateCertificate({ certificateId, newStatus: 'INACTIVE' }).promise();
+            await iot.updateCertificate({ certificateId, newStatus: 'INACTIVE' });
         }
     } catch (e) {
         // ignore
@@ -185,14 +179,14 @@ async function deleteThing(thingName: string) {
 
     try {
         if (certificateId !== undefined) {
-            await iot.deleteCertificate({ certificateId }).promise();
+            await iot.deleteCertificate({ certificateId });
         }
     } catch (e) {
         // ignore
     }
 
     try {
-        await iot.deleteThing({ thingName }).promise();
+        await iot.deleteThing({ thingName });
     } catch (e) {
         // ignore
     }
@@ -202,16 +196,14 @@ async function createThingGroup(thingGroupName: string, ...thingNames: string[])
     await iot
         .createThingGroup({
             thingGroupName,
-        })
-        .promise();
+        });
 
     for (const thingName of thingNames) {
         await iot
             .addThingToThingGroup({
                 thingGroupName,
                 thingName,
-            })
-            .promise();
+            });
     }
 }
 
@@ -219,8 +211,7 @@ async function deleteThingGroup(thingGroupName: string) {
     await iot
         .deleteThingGroup({
             thingGroupName,
-        })
-        .promise();
+        });
 }
 
 async function teardown_commandandcontrol_topics_feature() {

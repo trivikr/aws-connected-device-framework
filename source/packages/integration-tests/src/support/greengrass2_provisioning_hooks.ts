@@ -30,7 +30,7 @@ import { AUTHORIZATION_TOKEN } from '../step_definitions/common/common.steps';
 import { getAdditionalHeaders } from '../step_definitions/notifications/notifications.utils';
 
 import { logger } from '@awssolutions/simple-cdf-logger';
-import AWS from 'aws-sdk';
+import { S3 } from "@aws-sdk/client-s3";
 import { world } from '../step_definitions/greengrass2-provisioning/greengrass2.world';
 setDefaultTimeout(30 * 1000);
 /*
@@ -41,7 +41,9 @@ setDefaultTimeout(30 * 1000);
 // tslint:disable:no-invalid-this
 // tslint:disable:only-arrow-functions
 
-const s3 = new AWS.S3({ region: process.env.AWS_REGION });
+const s3 = new S3({
+    region: process.env.AWS_REGION
+});
 const ec2 = new EC2Client({ region: process.env.AWS_REGION });
 
 const templatesSvc: TemplatesService = container.get(
@@ -186,7 +188,7 @@ Before({ tags: '@setup_greengrass2_provisioning' }, async function () {
         Key: `${templatePrefix}Greengrass2IntegrationTestProvisioningTemplate.json`,
         Body: JSON.stringify(integrationTestTemplate),
     };
-    await s3.putObject(putObjectRequest).promise();
+    await s3.putObject(putObjectRequest);
 });
 
 Before({ tags: '@teardown_greengrass2_provisioning' }, async function () {

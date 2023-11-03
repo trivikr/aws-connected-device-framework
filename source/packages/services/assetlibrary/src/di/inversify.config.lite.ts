@@ -35,6 +35,8 @@ import { TYPES } from './types';
 
 import AWS from 'aws-sdk';
 
+import { IoT } from "@aws-sdk/client-iot";
+
 export const LiteContainerModule = new ContainerModule(
     (
         bind: interfaces.Bind,
@@ -68,7 +70,7 @@ export const LiteContainerModule = new ContainerModule(
                         const params: AWS.Iot.Types.ClientConfiguration = {
                             region: process.env.AWS_REGION,
                         };
-                        const iotData = new AWS.Iot(params);
+                        const iotData = new IoT(params);
                         bind<AWS.Iot>(TYPES.Iot).toConstantValue(iotData);
                     }
                     return ctx.container.get<AWS.Iot>(TYPES.Iot);

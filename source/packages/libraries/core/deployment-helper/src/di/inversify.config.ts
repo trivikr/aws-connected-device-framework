@@ -47,6 +47,12 @@ import { VpcEndpointCheckCustomResource } from '../customResources/vpcEndpointCh
 import { TYPES } from './types';
 
 import AWS from 'aws-sdk';
+import { EC2 } from "@aws-sdk/client-ec2";
+import { EventBridge } from "@aws-sdk/client-eventbridge";
+import { IoT } from "@aws-sdk/client-iot";
+import { Lambda } from "@aws-sdk/client-lambda";
+import { S3 } from "@aws-sdk/client-s3";
+import { STS } from "@aws-sdk/client-sts";
 // Load everything needed to the Container
 export const container = new Container();
 
@@ -60,7 +66,7 @@ container
     .toFactory<AWS.Lambda>((ctx: interfaces.Context) => {
         return () => {
             if (!container.isBound(LAMBDAINVOKE_TYPES.Lambda)) {
-                const lambda = new AWS.Lambda();
+                const lambda = new Lambda();
                 container.bind<AWS.Lambda>(LAMBDAINVOKE_TYPES.Lambda).toConstantValue(lambda);
             }
             return ctx.container.get<AWS.Lambda>(LAMBDAINVOKE_TYPES.Lambda);
@@ -178,7 +184,9 @@ decorate(injectable(), AWS.S3);
 container.bind<interfaces.Factory<AWS.S3>>(TYPES.S3Factory).toFactory<AWS.S3>(() => {
     return () => {
         if (!container.isBound(TYPES.S3)) {
-            const s3 = new AWS.S3({ region: process.env.AWS_REGION });
+            const s3 = new S3({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.S3>(TYPES.S3).toConstantValue(s3);
         }
         return container.get<AWS.S3>(TYPES.S3);
@@ -190,7 +198,9 @@ decorate(injectable(), AWS.Iot);
 container.bind<interfaces.Factory<AWS.Iot>>(TYPES.IotFactory).toFactory<AWS.Iot>(() => {
     return () => {
         if (!container.isBound(TYPES.Iot)) {
-            const iot = new AWS.Iot({ region: process.env.AWS_REGION });
+            const iot = new IoT({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.Iot>(TYPES.Iot).toConstantValue(iot);
         }
         return container.get<AWS.Iot>(TYPES.Iot);
@@ -201,7 +211,9 @@ decorate(injectable(), AWS.EC2);
 container.bind<interfaces.Factory<AWS.EC2>>(TYPES.EC2Factory).toFactory<AWS.EC2>(() => {
     return () => {
         if (!container.isBound(TYPES.EC2)) {
-            const ec2 = new AWS.EC2({ region: process.env.AWS_REGION });
+            const ec2 = new EC2({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.EC2>(TYPES.EC2).toConstantValue(ec2);
         }
         return container.get<AWS.EC2>(TYPES.EC2);
@@ -213,7 +225,7 @@ decorate(injectable(), AWS.STS);
 container.bind<interfaces.Factory<AWS.STS>>(TYPES.STSFactory).toFactory<AWS.STS>(() => {
     return () => {
         if (!container.isBound(TYPES.STS)) {
-            const sts = new AWS.STS();
+            const sts = new STS();
             container.bind<AWS.STS>(TYPES.STS).toConstantValue(sts);
         }
         return container.get<AWS.STS>(TYPES.STS);
@@ -227,7 +239,9 @@ container
     .toFactory<AWS.EventBridge>(() => {
         return (region: string) => {
             if (!container.isBound(TYPES.EventBridge)) {
-                const eventBridge = new AWS.EventBridge({ region });
+                const eventBridge = new EventBridge({
+                    region
+                });
                 container.bind<AWS.EventBridge>(TYPES.EventBridge).toConstantValue(eventBridge);
             }
             return container.get<AWS.EventBridge>(TYPES.EventBridge);

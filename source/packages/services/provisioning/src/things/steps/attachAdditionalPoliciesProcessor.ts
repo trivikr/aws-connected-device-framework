@@ -11,7 +11,7 @@
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
 import { logger } from '@awssolutions/simple-cdf-logger';
-import AWS from 'aws-sdk';
+import { IoT } from "@aws-sdk/client-iot";
 import { inject, injectable } from 'inversify';
 import ow from 'ow';
 import { generate } from 'shortid';
@@ -21,9 +21,9 @@ import { ProvisioningStepProcessor } from './provisioningStepProcessor';
 
 @injectable()
 export class AttachAdditionalPoliciesProcessor implements ProvisioningStepProcessor {
-    private _iot: AWS.Iot;
+    private _iot: IoT;
 
-    public constructor(@inject(TYPES.IotFactory) iotFactory: () => AWS.Iot) {
+    public constructor(@inject(TYPES.IotFactory) iotFactory: () => IoT) {
         this._iot = iotFactory();
     }
 

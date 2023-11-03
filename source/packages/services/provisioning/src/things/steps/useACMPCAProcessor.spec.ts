@@ -12,7 +12,10 @@
  *********************************************************************************************************************/
 import 'reflect-metadata';
 
-import { ACMPCA, AWSError, Iot } from 'aws-sdk';
+import { AWSError } from 'aws-sdk';
+
+import { ACMPCA, GetCertificateCommandOutput, IssueCertificateCommandOutput } from "@aws-sdk/client-acm-pca";
+import { IoT, RegisterCertificateCommandOutput } from "@aws-sdk/client-iot";
 
 import createMockInstance from 'jest-create-mock-instance';
 import { CertUtils } from '../../utils/cert';
@@ -34,7 +37,7 @@ const CSR = 'csr';
 
 describe('UseACMPCAStepProcessor', () => {
     let instance: UseACMPCAStepProcessor;
-    const mockIot = new Iot();
+    const mockIot = new IoT();
     let certUtils: jest.Mocked<CertUtils>;
     const mockACMPCA = new ACMPCA();
 
@@ -474,7 +477,7 @@ function mockGetCertificate(mockACMPCA: ACMPCA): jest.Mock<any, any> {
         message: '',
         time: undefined,
     };
-    const mockedGetCertificateSuccessResponse: ACMPCA.GetCertificateResponse = {
+    const mockedGetCertificateSuccessResponse: GetCertificateCommandOutput = {
         Certificate: CERTIFICATE_PEM,
         CertificateChain: CERTIFICATE_CHAIN_PEM,
     };
@@ -497,7 +500,7 @@ function mockGetCertificate(mockACMPCA: ACMPCA): jest.Mock<any, any> {
 }
 
 function mockIssueCertificate(mockACMPCA: ACMPCA): jest.Mock<any, any> {
-    const mockedIssueCertificateResponse: ACMPCA.IssueCertificateResponse = {
+    const mockedIssueCertificateResponse: IssueCertificateCommandOutput = {
         CertificateArn: CERTIFICATE_ARN,
     };
 
@@ -537,7 +540,7 @@ function mockGetCaCertificate(mockCertUtils: CertUtils): jest.Mock<any, any> {
 }
 
 function mockRegisterCertificate(mockIot: Iot): jest.Mock<any, any> {
-    const mockedRegisterCertificateResponse: Iot.RegisterCertificateResponse = {
+    const mockedRegisterCertificateResponse: RegisterCertificateCommandOutput = {
         certificateArn: CERTIFICATE_ARN,
         certificateId: CERTIFICATE_ID,
     };

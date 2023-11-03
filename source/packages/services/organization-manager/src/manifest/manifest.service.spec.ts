@@ -12,8 +12,7 @@
  *********************************************************************************************************************/
 import 'reflect-metadata';
 
-import AWS from 'aws-sdk';
-import S3, { ManagedUpload } from 'aws-sdk/clients/s3';
+import { ManagedUpload, S3 } from "@aws-sdk/client-s3";
 import { createMockInstance } from 'jest-create-mock-instance';
 import JSZip from 'jszip';
 import { ComponentsDao } from '../components/components.dao';
@@ -28,13 +27,13 @@ describe('TemplatesService', function () {
     let mockedComponentsDao: jest.Mocked<ComponentsDao>;
     let mockedOrganizationalUnitsDao: jest.Mocked<OrganizationalUnitsDao>;
 
-    let mockS3: AWS.S3;
+    let mockS3: S3;
     let instance: ManifestService;
 
     beforeEach(() => {
         jest.clearAllMocks();
 
-        mockS3 = new AWS.S3();
+        mockS3 = new S3();
 
         const mockS3Factory = () => {
             return mockS3;

@@ -14,6 +14,10 @@ import 'reflect-metadata';
 
 import '@awssolutions/cdf-config-inject';
 import AWS, { AWSError } from 'aws-sdk';
+import { ACMPCA, GetCertificateCommandOutput, IssueCertificateCommandOutput } from "@aws-sdk/client-acm-pca";
+import { CreateCertificateFromCsrCommandOutput, IoT } from "@aws-sdk/client-iot";
+import { S3 } from "@aws-sdk/client-s3";
+import { SSM } from "@aws-sdk/client-ssm";
 import { createMockInstance } from 'jest-create-mock-instance';
 import { CertificateChunkRequest, CommonNameGenerator } from './certificates.models';
 import { CertificatesService } from './certificates.service';
@@ -23,16 +27,16 @@ describe('CertificatesService', () => {
     let mockedCertificatesTaskDao: jest.Mocked<CertificatesTaskDao>;
     let instance: CertificatesService;
 
-    let mockS3: AWS.S3;
-    let mockIot: AWS.Iot;
-    let mockSsm: AWS.SSM;
-    let mockApmca: AWS.ACMPCA;
+    let mockS3: S3;
+    let mockIot: IoT;
+    let mockSsm: SSM;
+    let mockApmca: ACMPCA;
 
     beforeEach(() => {
-        mockS3 = new AWS.S3();
-        mockIot = new AWS.Iot();
-        mockSsm = new AWS.SSM();
-        mockApmca = new AWS.ACMPCA();
+        mockS3 = new S3();
+        mockIot = new IoT();
+        mockSsm = new SSM();
+        mockApmca = new ACMPCA();
         mockedCertificatesTaskDao = createMockInstance(CertificatesTaskDao);
 
         const mockS3Factory = () => {
@@ -245,7 +249,7 @@ describe('CertificatesService', () => {
         };
         const mockUpload = (mockS3.upload = <any>jest.fn((_params) => mockUploadResponse));
 
-        const createCertFromCsrResponse: AWS.Iot.CreateCertificateFromCsrResponse = {
+        const createCertFromCsrResponse: CreateCertificateFromCsrCommandOutput = {
             certificateArn:
                 'arn:aws:iot:us-west-2:xxxxxxxxxxxx:cacert/3d2ecfdb0eba2898626291e7e18a37cee791dbc81940a39e8ce922f9ff2feb32',
             certificateId: '3d2ecfdb0eba2898626291e7e18a37cee791dbc81940a39e8ce922f9ff2feb32',
@@ -295,12 +299,12 @@ describe('CertificatesService', () => {
         };
         const mockUpload = (mockS3.upload = <any>jest.fn((_params) => mockUploadResponse));
 
-        const issueCertificateResponse: AWS.ACMPCA.IssueCertificateResponse = {
+        const issueCertificateResponse: IssueCertificateCommandOutput = {
             CertificateArn:
                 'arn:aws:acm-pca:us-west-2:xxxxxxxxxxxx/certificate/17ef9add-91a6-4c1f-b13b-0f6ec1952722',
         };
 
-        const getCertificateResponse: AWS.ACMPCA.GetCertificateResponse = {
+        const getCertificateResponse: GetCertificateCommandOutput = {
             CertificateChain:
                 'arn:aws:iot:us-west-2:xxxxxxxxxxxx:cacert/3d2ecfdb0eba2898626291e7e18a37cee791dbc81940a39e8ce922f9ff2feb32',
             Certificate: btoa(

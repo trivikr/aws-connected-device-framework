@@ -11,8 +11,7 @@
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
 import { logger } from '@awssolutions/simple-cdf-logger';
-import AWS from 'aws-sdk';
-import { SendMessageResult } from 'aws-sdk/clients/sqs';
+import { SendMessageCommandOutput, SQS } from "@aws-sdk/client-sqs";
 import { inject, injectable } from 'inversify';
 import ow from 'ow';
 import pLimit from 'p-limit';
@@ -24,7 +23,7 @@ import { WorkflowAction } from './workflow.interfaces';
 
 @injectable()
 export class BatchTargetsAction implements WorkflowAction {
-    private sqs: AWS.SQS;
+    private sqs: SQS;
 
     constructor(
         @inject('aws.sqs.queues.messages.queueUrl') private messagesQueueUrl: string,
@@ -34,7 +33,7 @@ export class BatchTargetsAction implements WorkflowAction {
         @inject('aws.sqs.queues.messages.job.batchSize') private jobMessagesBatchSize: number,
         @inject('promises.concurrency') private promisesConcurrency: number,
         @inject(TYPES.MessagesDao) private messagesDao: MessagesDao,
-        @inject(TYPES.SQSFactory) sqsFactory: () => AWS.SQS
+        @inject(TYPES.SQSFactory) sqsFactory: () => SQS
     ) {
         this.sqs = sqsFactory();
     }
@@ -64,7 +63,7 @@ export class BatchTargetsAction implements WorkflowAction {
         await this.messagesDao.saveBatchProgress(message);
 
         // send each batch of deployments to sqs for async processing
-        const sqsFutures: Promise<SendMessageResult>[] = [];
+        const sqsFutures: Promise<SendMessageCommandOutput>[] = [];
         const limit = pLimit(this.promisesConcurrency);
         for (const batch of batches) {
             // replace full list of resolved targets with the batch, so the message item now represents a batch
@@ -91,7 +90,7 @@ export class BatchTargetsAction implements WorkflowAction {
     private async sqsSendMessage(
         message: MessageItem,
         command: CommandItem
-    ): Promise<SendMessageResult> {
+    ): Promise<SendMessageCommandOutput> {
         return this.sqs
             .sendMessage({
                 QueueUrl: this.messagesQueueUrl,

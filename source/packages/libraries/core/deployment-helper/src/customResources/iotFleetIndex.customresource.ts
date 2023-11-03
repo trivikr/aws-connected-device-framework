@@ -12,21 +12,21 @@
  *********************************************************************************************************************/
 import { inject, injectable } from 'inversify';
 
-import AWS from 'aws-sdk';
+import { IoT, UpdateIndexingConfigurationCommandInput } from "@aws-sdk/client-iot";
 import { TYPES } from '../di/types';
 import { CustomResource } from './customResource';
 import { CustomResourceEvent } from './customResource.model';
 
 @injectable()
 export class IotFleetIndexCustomResource implements CustomResource {
-    private _iot: AWS.Iot;
+    private _iot: IoT;
 
-    constructor(@inject(TYPES.IotFactory) iotFactory: () => AWS.Iot) {
+    constructor(@inject(TYPES.IotFactory) iotFactory: () => IoT) {
         this._iot = iotFactory();
     }
 
     public async create(_customResourceEvent: CustomResourceEvent): Promise<unknown> {
-        const indexingConfiguration: AWS.Iot.UpdateIndexingConfigurationRequest = {
+        const indexingConfiguration: UpdateIndexingConfigurationCommandInput = {
             thingGroupIndexingConfiguration: {
                 thingGroupIndexingMode: 'ON',
             },

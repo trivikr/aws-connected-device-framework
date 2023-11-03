@@ -13,16 +13,16 @@
 import { inject, injectable } from 'inversify';
 
 import { logger } from '@awssolutions/simple-cdf-logger';
-import AWS from 'aws-sdk';
+import { S3 } from "@aws-sdk/client-s3";
 import { TYPES } from '../di/types';
 import { CustomResource } from './customResource';
 import { CustomResourceEvent } from './customResource.model';
 
 @injectable()
 export class AppConfigOverrideCustomResource implements CustomResource {
-    private s3: AWS.S3;
+    private s3: S3;
 
-    constructor(@inject(TYPES.S3Factory) s3Factory: () => AWS.S3) {
+    constructor(@inject(TYPES.S3Factory) s3Factory: () => S3) {
         this.s3 = s3Factory();
     }
 

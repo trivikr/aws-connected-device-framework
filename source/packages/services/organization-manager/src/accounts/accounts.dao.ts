@@ -11,8 +11,8 @@
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
 import { logger } from '@awssolutions/simple-cdf-logger';
-import AWS from 'aws-sdk';
-import { TransactWriteItemList, Update } from 'aws-sdk/clients/dynamodb';
+import { any, TransactWriteItem } from "@aws-sdk/lib-dynamodb";
+import { DocumentClient, TransactWriteItem, Update } from "@aws-sdk/client-dynamodb";
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../di/types';
 import {
@@ -31,14 +31,14 @@ import {
 } from './accounts.models';
 @injectable()
 export class AccountsDao {
-    private _dc: AWS.DynamoDB.DocumentClient;
+    private _dc: DocumentClient;
 
     public constructor(
         @inject('aws.dynamodb.tables.accounts') private accountsTable: string,
         @inject('aws.dynamodb.tables.gsi1') private accountsTableGsi1: string,
         @inject('aws.dynamodb.tables.gsi2') private accountsTableGsi2: string,
         @inject(TYPES.DocumentClientFactory)
-        documentClientFactory: () => AWS.DynamoDB.DocumentClient
+        documentClientFactory: () => DocumentClient
     ) {
         this._dc = documentClientFactory();
     }
@@ -47,7 +47,7 @@ export class AccountsDao {
         organizationalUnit: string,
         regions: string[],
         accountId: string
-    ): AWS.DynamoDB.DocumentClient.TransactWriteItemList {
+    ): Array<TransactWriteItem> {
         return regions.map((region) => {
             return {
                 Put: {
@@ -112,7 +112,7 @@ export class AccountsDao {
         return item;
     }
 
-    private static assembleAccounts(result: AWS.DynamoDB.DocumentClient.ItemList): AccountsItem[] {
+    private static assembleAccounts(result: Array<Record<string, any>>): AccountsItem[] {
         logger.debug(`accounts.dao assembleAccounts: in: result: ${JSON.stringify(result)}`);
 
         const accountItems = [];
@@ -127,7 +127,7 @@ export class AccountsDao {
     }
 
     private static assembleAccount(
-        result: AWS.DynamoDB.DocumentClient.AttributeMap
+        result: Record<string, any>
     ): AccountsItem {
         logger.debug(`accounts.dao assembleAccount: in: result: ${JSON.stringify(result)}`);
         const { pk, sk, status, regions, gsi2Key, email, ssoEmail, ssoFirstName, ssoLastName } =
@@ -156,7 +156,7 @@ export class AccountsDao {
     }
 
     private static assembleComponentsDeploymentStatus(
-        result: AWS.DynamoDB.DocumentClient.ItemList
+        result: Array<Record<string, any>>
     ): AccountComponentModel[] {
         logger.debug(
             `accounts.dao assembleComponentsDeploymentStatus: in: result: ${JSON.stringify(
@@ -303,7 +303,7 @@ export class AccountsDao {
 
         const { name, organizationalUnitId, ...accountProperties } = updateRequest;
 
-        const transactItems: TransactWriteItemList = [];
+        const transactItems: Array<TransactWriteItem> = [];
 
         const params = {
             TableName: this.accountsTable,

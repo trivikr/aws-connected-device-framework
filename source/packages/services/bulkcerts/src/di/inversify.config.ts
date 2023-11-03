@@ -25,6 +25,13 @@ import { TYPES } from './types';
 
 import AWS from 'aws-sdk';
 
+import { ACMPCA } from "@aws-sdk/client-acm-pca";
+import { DynamoDB } from "@aws-sdk/client-dynamodb";
+import { IoT } from "@aws-sdk/client-iot";
+import { S3 } from "@aws-sdk/client-s3";
+import { SNS } from "@aws-sdk/client-sns";
+import { SSM } from "@aws-sdk/client-ssm";
+
 // Load everything needed to the Container
 export const container = new Container();
 
@@ -93,7 +100,9 @@ container
     .toFactory<AWS.DynamoDB>(() => {
         return () => {
             if (!container.isBound(TYPES.DynamoDB)) {
-                const dynamodb = new AWS.DynamoDB({ region: process.env.AWS_REGION });
+                const dynamodb = new DynamoDB({
+                    region: process.env.AWS_REGION
+                });
                 container.bind<AWS.DynamoDB>(TYPES.DynamoDB).toConstantValue(dynamodb);
             }
             return container.get<AWS.DynamoDB>(TYPES.DynamoDB);
@@ -104,7 +113,9 @@ decorate(injectable(), AWS.Iot);
 container.bind<interfaces.Factory<AWS.Iot>>(TYPES.IotFactory).toFactory<AWS.Iot>(() => {
     return () => {
         if (!container.isBound(TYPES.Iot)) {
-            const iot = new AWS.Iot({ region: process.env.AWS_REGION });
+            const iot = new IoT({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.Iot>(TYPES.Iot).toConstantValue(iot);
         }
         return container.get<AWS.Iot>(TYPES.Iot);
@@ -115,7 +126,9 @@ decorate(injectable(), AWS.S3);
 container.bind<interfaces.Factory<AWS.S3>>(TYPES.S3Factory).toFactory<AWS.S3>(() => {
     return () => {
         if (!container.isBound(TYPES.S3)) {
-            const s3 = new AWS.S3({ region: process.env.AWS_REGION });
+            const s3 = new S3({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.S3>(TYPES.S3).toConstantValue(s3);
         }
         return container.get<AWS.S3>(TYPES.S3);
@@ -126,7 +139,9 @@ decorate(injectable(), AWS.SSM);
 container.bind<interfaces.Factory<AWS.SSM>>(TYPES.SSMFactory).toFactory<AWS.SSM>(() => {
     return () => {
         if (!container.isBound(TYPES.SSM)) {
-            const ssm = new AWS.SSM({ region: process.env.AWS_REGION });
+            const ssm = new SSM({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.SSM>(TYPES.SSM).toConstantValue(ssm);
         }
         return container.get<AWS.SSM>(TYPES.SSM);
@@ -137,7 +152,9 @@ decorate(injectable(), AWS.SNS);
 container.bind<interfaces.Factory<AWS.SNS>>(TYPES.SNSFactory).toFactory<AWS.SNS>(() => {
     return () => {
         if (!container.isBound(TYPES.SNS)) {
-            const sns = new AWS.SNS({ region: process.env.AWS_REGION });
+            const sns = new SNS({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.SNS>(TYPES.SNS).toConstantValue(sns);
         }
         return container.get<AWS.SNS>(TYPES.SNS);
@@ -148,7 +165,9 @@ decorate(injectable(), AWS.ACMPCA);
 container.bind<interfaces.Factory<AWS.ACMPCA>>(TYPES.ACMPCAFactory).toFactory<AWS.ACMPCA>(() => {
     return () => {
         if (!container.isBound(TYPES.ACMPCA)) {
-            const acmpma = new AWS.ACMPCA({ region: process.env.AWS_REGION });
+            const acmpma = new ACMPCA({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.ACMPCA>(TYPES.ACMPCA).toConstantValue(acmpma);
         }
         return container.get<AWS.ACMPCA>(TYPES.ACMPCA);

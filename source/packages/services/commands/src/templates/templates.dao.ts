@@ -10,7 +10,9 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions    *
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
-import AWS from 'aws-sdk';
+
+
+import { DocumentClient } from "@aws-sdk/client-dynamodb";
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../di/types';
 import { logger } from '../utils/logger';
@@ -18,12 +20,12 @@ import { TemplateListModel, TemplateModel, TemplateSummaryModel } from './templa
 
 @injectable()
 export class TemplatesDao {
-    private _dc: AWS.DynamoDB.DocumentClient;
+    private _dc: DocumentClient;
 
     public constructor(
         @inject('tables.templates') private templatesTable: string,
         @inject(TYPES.DocumentClientFactory)
-        documentClientFactory: () => AWS.DynamoDB.DocumentClient
+        documentClientFactory: () => DocumentClient
     ) {
         this._dc = documentClientFactory();
     }

@@ -25,7 +25,8 @@ import { ThingsService } from '@awssolutions/cdf-provisioning-client';
 import { TemplatesService } from '../../templates/templates.service';
 import { StartJobAction, TargetType } from './workflow.startjob';
 
-import AWS from 'aws-sdk';
+import { IoT } from "@aws-sdk/client-iot";
+import { S3 } from "@aws-sdk/client-s3";
 import { mock } from 'jest-mock-extended';
 import { CommandsDao } from '../commands.dao';
 import { CommandsValidator } from '../commands.validator';
@@ -38,8 +39,8 @@ let mockedAssetLibrarySearchService: jest.Mocked<SearchService>;
 let mockedProvisioningThingsService: jest.Mocked<ThingsService>;
 let mockedValidator: jest.Mocked<CommandsValidator>;
 let instance: StartJobAction;
-let mockedIot: AWS.Iot;
-let mockedS3: AWS.S3;
+let mockedIot: IoT;
+let mockedS3: S3;
 
 describe('StartJobAction', () => {
     beforeEach(() => {
@@ -50,8 +51,8 @@ describe('StartJobAction', () => {
         mockedAssetLibraryGroupsService = mock<GroupsService>();
         mockedAssetLibrarySearchService = mock<SearchService>();
         mockedProvisioningThingsService = mock<ThingsService>();
-        mockedS3 = new AWS.S3();
-        mockedIot = new AWS.Iot();
+        mockedS3 = new S3();
+        mockedIot = new IoT();
 
         const mockedS3Factory = () => {
             return mockedS3;

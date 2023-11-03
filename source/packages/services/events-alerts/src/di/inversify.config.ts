@@ -25,6 +25,9 @@ import { SNSTarget } from '../targets/sns.target';
 import { TYPES } from './types';
 
 import AWS from 'aws-sdk';
+import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
+import { DocumentClient, DynamoDB } from "@aws-sdk/client-dynamodb";
+import { SNS } from "@aws-sdk/client-sns";
 import AmazonDaxClient = require('amazon-dax-client');
 // Note: importing @controller's carries out a one time inversify metadata generation...
 
@@ -64,7 +67,9 @@ decorate(injectable(), AWS.SNS);
 container.bind<interfaces.Factory<AWS.SNS>>(TYPES.SNSFactory).toFactory<AWS.SNS>(() => {
     return () => {
         if (!container.isBound(TYPES.SNS)) {
-            const sns = new AWS.SNS({ region: process.env.AWS_REGION });
+            const sns = new SNS({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.SNS>(TYPES.SNS).toConstantValue(sns);
         }
         return container.get<AWS.SNS>(TYPES.SNS);
@@ -77,7 +82,7 @@ container
     .toFactory<AWS.DynamoDB.DocumentClient>(() => {
         return () => {
             if (!container.isBound(TYPES.DocumentClient)) {
-                const dc = new AWS.DynamoDB.DocumentClient({ region: process.env.AWS_REGION });
+                const dc = DynamoDBDocument.from(new DynamoDB({ region: process.env.AWS_REGION }));
                 container
                     .bind<AWS.DynamoDB.DocumentClient>(TYPES.DocumentClient)
                     .toConstantValue(dc);
@@ -91,18 +96,18 @@ container
         return () => {
             if (!container.isBound(TYPES.CachableDocumentClient)) {
                 // if we have DAX configured, return a DAX enabled DocumentClient, but if not just return the normal one
-                let dc: AWS.DynamoDB.DocumentClient;
+                let dc: DocumentClient;
                 if (process.env.AWS_DYNAMODB_DAX_ENDPOINTS !== undefined) {
                     const dax = new AmazonDaxClient({
                         endpoints: process.env.AWS_DYNAMODB_DAX_ENDPOINTS,
                         region: process.env.AWS_REGION,
                     });
-                    dc = new AWS.DynamoDB.DocumentClient({ service: dax });
+                    dc = DynamoDBDocument.from(dax);
                 } else {
                     const dcf = container.get<interfaces.Factory<AWS.DynamoDB.DocumentClient>>(
                         TYPES.DocumentClientFactory
                     );
-                    dc = <AWS.DynamoDB.DocumentClient>dcf();
+                    dc = <DocumentClient>dcf();
                 }
                 container
                     .bind<AWS.DynamoDB.DocumentClient>(TYPES.CachableDocumentClient)

@@ -12,17 +12,19 @@
  *********************************************************************************************************************/
 import 'reflect-metadata';
 
-import AWS, { AWSError } from 'aws-sdk';
+import { AWSError } from 'aws-sdk';
+
+import { Lambda } from "@aws-sdk/client-lambda";
 
 import { LambdaApiGatewayEventBuilder } from './lambdainvoker.model';
 import { LambdaInvokerService } from './lambdainvoker.service';
 
 describe('LambdaInvokeService', () => {
-    let mockedLambda: AWS.Lambda;
+    let mockedLambda: Lambda;
     let instance: LambdaInvokerService;
 
     beforeEach(() => {
-        mockedLambda = new AWS.Lambda();
+        mockedLambda = new Lambda();
         const mockedLambdaFactory = () => {
             return mockedLambda;
         };

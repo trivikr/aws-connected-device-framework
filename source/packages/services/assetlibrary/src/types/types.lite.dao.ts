@@ -13,8 +13,7 @@
 import { logger } from '@awssolutions/simple-cdf-logger';
 import { inject, injectable } from 'inversify';
 
-import { Iot } from 'aws-sdk';
-import { ThingTypeDefinition } from 'aws-sdk/clients/iot';
+import { ThingTypeDefinition } from "@aws-sdk/client-iot";
 import { TYPES } from '../di/types';
 import { TypeCategory } from './constants';
 import {

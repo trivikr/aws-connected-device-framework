@@ -16,7 +16,12 @@ import ow from 'ow';
 import { logger } from '@awssolutions/simple-cdf-logger';
 import { TYPES } from '../../di/types';
 
-import { ACMPCA } from 'aws-sdk';
+import {
+    ACMPCA,
+    GetCertificateCommandOutput,
+    IssueCertificateCommandInput,
+    IssueCertificateCommandOutput,
+} from "@aws-sdk/client-acm-pca";
 import { CertUtils } from '../../utils/cert';
 import { CertInfo, CertificateStatus, UseACMPCAParameters } from '../things.models';
 import { ProvisioningStepData } from './provisioningStep.model';
@@ -131,7 +136,7 @@ export class UseACMPCAStepProcessor implements ProvisioningStepProcessor {
             )}, csr:${csr}`
         );
 
-        const params: ACMPCA.IssueCertificateRequest = {
+        const params: IssueCertificateCommandInput = {
             Csr: csr,
             CertificateAuthorityArn: caArn,
             SigningAlgorithm: 'SHA256WITHRSA',
@@ -150,11 +155,11 @@ export class UseACMPCAStepProcessor implements ProvisioningStepProcessor {
             },
         };
 
-        const issueResponse: ACMPCA.IssueCertificateResponse = await this.acmpcaFactory()
+        const issueResponse: IssueCertificateCommandOutput = await this.acmpcaFactory()
             .issueCertificate(params)
             .promise();
 
-        let getResponse: ACMPCA.GetCertificateResponse;
+        let getResponse: GetCertificateCommandOutput;
         // eslint-disable-next-line no-constant-condition
         while (true) {
             try {

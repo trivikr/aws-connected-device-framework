@@ -11,13 +11,15 @@
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
 
-import { SendMessageResult } from 'aws-sdk/clients/sqs';
+
+
+import { SendMessageCommandOutput, SQS } from "@aws-sdk/client-sqs";
 import { inject, injectable } from 'inversify';
 import ow from 'ow';
 import pLimit from 'p-limit';
 
 import { logger } from '@awssolutions/simple-cdf-logger';
-import AWS from 'aws-sdk';
+import { IoT } from "@aws-sdk/client-iot";
 import ShortUniqueId from 'short-unique-id';
 import { CommandsDao } from '../commands/commands.dao';
 import { CommandItem } from '../commands/commands.models';
@@ -39,8 +41,8 @@ import { InvalidTransitionAction } from './workflow/workflow.invalidTransition';
 @injectable()
 export class MessagesService {
     private readonly uidGenerator: ShortUniqueId;
-    private sqs: AWS.SQS;
-    private iot: AWS.Iot;
+    private sqs: SQS;
+    private iot: IoT;
 
     constructor(
         @inject('promises.concurrency') private promisesConcurrency: number,
@@ -48,8 +50,8 @@ export class MessagesService {
         @inject(TYPES.CommandsDao) private commandsDao: CommandsDao,
         @inject(TYPES.MessagesDao) private messagesDao: MessagesDao,
         @inject(TYPES.WorkflowFactory) private workflowFactory: WorkflowFactory,
-        @inject(TYPES.SQSFactory) sqsFactory: () => AWS.SQS,
-        @inject(TYPES.IotFactory) iotFactory: () => AWS.Iot
+        @inject(TYPES.SQSFactory) sqsFactory: () => SQS,
+        @inject(TYPES.IotFactory) iotFactory: () => IoT
     ) {
         this.sqs = sqsFactory();
         this.iot = iotFactory();
@@ -382,7 +384,7 @@ export class MessagesService {
         let exclusiveStart: RecipientListPaginationKey;
         // eslint-disable-next-line no-constant-condition
         while (true) {
-            const futures: Promise<SendMessageResult>[] = [];
+            const futures: Promise<SendMessageCommandOutput>[] = [];
             const r = await this.listRecipients(messageId, exclusiveStart);
             r[0]?.forEach(async (recipient) => {
                 // delete the recipient, processing a page at a time. this will allow the delete method to be safely rerun in the edge case where deletion of millions of recipients of a message may fail due to exceeding lambda execution time limits
@@ -417,7 +419,7 @@ export class MessagesService {
     private async sqsSendMessageForProcessing(
         message: MessageItem,
         command: CommandItem
-    ): Promise<SendMessageResult> {
+    ): Promise<SendMessageCommandOutput> {
         return this.sqs
             .sendMessage({
                 QueueUrl: this.messagesQueueUrl,
@@ -435,7 +437,7 @@ export class MessagesService {
             .promise();
     }
 
-    private async sqsSendMessageForDeletion(messageId: string): Promise<SendMessageResult> {
+    private async sqsSendMessageForDeletion(messageId: string): Promise<SendMessageCommandOutput> {
         return this.sqs
             .sendMessage({
                 QueueUrl: this.messagesQueueUrl,
@@ -455,7 +457,7 @@ export class MessagesService {
     private async sqsSendRecipientForDeletion(
         messageId: string,
         thingName: string
-    ): Promise<SendMessageResult> {
+    ): Promise<SendMessageCommandOutput> {
         return this.sqs
             .sendMessage({
                 QueueUrl: this.messagesQueueUrl,

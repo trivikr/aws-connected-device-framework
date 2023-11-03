@@ -12,6 +12,7 @@
  *********************************************************************************************************************/
 import { LAMBDAINVOKE_TYPES, LambdaInvokerService } from '@awssolutions/cdf-lambda-invoke';
 import AWS from 'aws-sdk';
+import { Lambda } from "@aws-sdk/client-lambda";
 import { ContainerModule, decorate, injectable, interfaces } from 'inversify';
 import { DevicesApigwService } from '../client/devices.apigw.service';
 import { DevicesLambdaService } from '../client/devices.lambda.service';
@@ -69,7 +70,9 @@ export const assetLibraryContainerModule = new ContainerModule(
                 ).toFactory<AWS.Lambda>((ctx: interfaces.Context) => {
                     return () => {
                         if (!isBound(LAMBDAINVOKE_TYPES.Lambda)) {
-                            const lambda = new AWS.Lambda({ region: process.env.AWS_REGION });
+                            const lambda = new Lambda({
+                                region: process.env.AWS_REGION
+                            });
                             bind<AWS.Lambda>(LAMBDAINVOKE_TYPES.Lambda).toConstantValue(lambda);
                         }
                         return ctx.container.get<AWS.Lambda>(LAMBDAINVOKE_TYPES.Lambda);

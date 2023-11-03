@@ -16,7 +16,7 @@ import ow from 'ow';
 import { logger } from '@awssolutions/simple-cdf-logger';
 import { TYPES } from '../di/types';
 
-import { DescribeInstanceInformationRequest } from 'aws-sdk/clients/ssm';
+import { DescribeInstanceInformationCommandInput } from "@aws-sdk/client-ssm";
 import { ActivationDao } from '../activation/activation.dao';
 import { PatchTemplatesService } from '../templates/template.service';
 import { ExpressionParser } from '../utils/expression.util';
@@ -256,7 +256,7 @@ export class AgentbasedPatchService {
 
         ow(activationId, 'Activation Id', ow.string.nonEmpty);
 
-        const params: DescribeInstanceInformationRequest = {
+        const params: DescribeInstanceInformationCommandInput = {
             Filters: [
                 {
                     Key: 'ActivationIds',

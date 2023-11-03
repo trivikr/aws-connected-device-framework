@@ -12,7 +12,7 @@
  *********************************************************************************************************************/
 import { logger } from '@awssolutions/simple-cdf-logger';
 import AWS from 'aws-sdk';
-import { VpcEndpointRouteTableIdList, VpcEndpointSubnetIdList } from 'aws-sdk/clients/ec2';
+import { CreateVpcEndpointCommandInput, CreateVpcEndpointCommandOutput, EC2 } from "@aws-sdk/client-ec2";
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../di/types';
 import { CustomResource } from './customResource';
@@ -20,9 +20,9 @@ import { CustomResourceEvent } from './customResource.model';
 
 @injectable()
 export class VpcEndpointCustomResource implements CustomResource {
-    private ec2: AWS.EC2;
+    private ec2: EC2;
 
-    constructor(@inject(TYPES.EC2Factory) ec2Factory: () => AWS.EC2) {
+    constructor(@inject(TYPES.EC2Factory) ec2Factory: () => EC2) {
         this.ec2 = ec2Factory();
     }
 
@@ -37,12 +37,12 @@ export class VpcEndpointCustomResource implements CustomResource {
         const region = customResourceEvent.ResourceProperties.Region;
         const serviceName = customResourceEvent.ResourceProperties.ServiceName;
         const routeTableIds = (customResourceEvent.ResourceProperties.RouteTableIds ||
-            []) as VpcEndpointRouteTableIdList;
+            []) as Array<string>;
         let policyDocument = customResourceEvent.ResourceProperties.PolicyDocument || '';
         const privateDnsEnabled =
             customResourceEvent.ResourceProperties.PrivateDnsEnabled === 'true';
         const subnetIds = (customResourceEvent.ResourceProperties.SubnetIds ||
-            []) as VpcEndpointSubnetIdList;
+            []) as Array<string>;
         const vpcEndpointType =
             customResourceEvent.ResourceProperties.VpcEndpointType || 'Gateway';
 
@@ -55,7 +55,7 @@ export class VpcEndpointCustomResource implements CustomResource {
         const existingEndpoints = await this.getVpcEndpoint(vpcId, endpoint);
 
         if (existingEndpoints.length === 0) {
-            const vpcConfig: AWS.EC2.CreateVpcEndpointRequest = {
+            const vpcConfig: CreateVpcEndpointCommandInput = {
                 VpcId: null,
                 ServiceName: null,
             };
@@ -87,7 +87,7 @@ export class VpcEndpointCustomResource implements CustomResource {
                     break;
             }
 
-            const result: AWS.EC2.CreateVpcEndpointResult = await this.createVpcEndpoint(
+            const result: CreateVpcEndpointCommandOutput = await this.createVpcEndpoint(
                 vpcConfig
             );
 
@@ -165,8 +165,8 @@ export class VpcEndpointCustomResource implements CustomResource {
     }
 
     private async createVpcEndpoint(
-        vpcConfig: AWS.EC2.CreateVpcEndpointRequest
-    ): Promise<AWS.EC2.CreateVpcEndpointResult> {
+        vpcConfig: CreateVpcEndpointCommandInput
+    ): Promise<CreateVpcEndpointCommandOutput> {
         logger.debug(
             `VpcEndpointCustomResource: createVpcEndpoint: in: vpcConfig: ${JSON.stringify(
                 vpcConfig

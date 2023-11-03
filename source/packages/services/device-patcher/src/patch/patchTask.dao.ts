@@ -11,7 +11,8 @@
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
 import atob from 'atob';
-import AWS from 'aws-sdk';
+import { any } from "@aws-sdk/lib-dynamodb";
+import { DocumentClient } from "@aws-sdk/client-dynamodb";
 import btoa from 'btoa';
 import { inject, injectable } from 'inversify';
 
@@ -25,12 +26,12 @@ import { PatchTaskItem, PatchTaskList } from './patchTask.model';
 
 @injectable()
 export class PatchTaskDao {
-    private dc: AWS.DynamoDB.DocumentClient;
+    private dc: DocumentClient;
     private readonly tableName = process.env.AWS_DYNAMODB_TABLE_NAME;
 
     constructor(
         @inject(TYPES.DocumentClientFactory)
-        documentClientFactory: () => AWS.DynamoDB.DocumentClient,
+        documentClientFactory: () => DocumentClient,
         @inject(TYPES.PatchDao) private patchDao: PatchDao
     ) {
         this.dc = documentClientFactory();
@@ -138,7 +139,7 @@ export class PatchTaskDao {
         return [patches, paginationKey];
     }
 
-    private assemble(items: AWS.DynamoDB.DocumentClient.ItemList): PatchTaskList {
+    private assemble(items: Array<Record<string, any>>): PatchTaskList {
         const list = new PatchTaskList();
 
         for (const i of items) {

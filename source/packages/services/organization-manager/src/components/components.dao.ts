@@ -11,7 +11,8 @@
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
 import { logger } from '@awssolutions/simple-cdf-logger';
-import AWS from 'aws-sdk';
+import { any } from "@aws-sdk/lib-dynamodb";
+import { DocumentClient } from "@aws-sdk/client-dynamodb";
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../di/types';
 import {
@@ -23,12 +24,12 @@ import { ComponentItem } from './components.model';
 
 @injectable()
 export class ComponentsDao {
-    private _dc: AWS.DynamoDB.DocumentClient;
+    private _dc: DocumentClient;
 
     public constructor(
         @inject('aws.dynamodb.tables.accounts') private accountsTable: string,
         @inject(TYPES.DocumentClientFactory)
-        documentClientFactory: () => AWS.DynamoDB.DocumentClient
+        documentClientFactory: () => DocumentClient
     ) {
         this._dc = documentClientFactory();
     }
@@ -62,7 +63,7 @@ export class ComponentsDao {
     }
 
     private static assembleComponents(
-        result: AWS.DynamoDB.DocumentClient.ItemList
+        result: Array<Record<string, any>>
     ): ComponentItem[] {
         logger.debug(`components.dao assemble: in: result: ${JSON.stringify(result)}`);
         const itemList = [];
@@ -74,7 +75,7 @@ export class ComponentsDao {
     }
 
     private static assembleComponent(
-        result: AWS.DynamoDB.DocumentClient.AttributeMap
+        result: Record<string, any>
     ): ComponentItem {
         logger.debug(`components.dao assembleComponent: in: result: ${JSON.stringify(result)}`);
         const { pk, sk, parameters, description, runOrder, resourceFile, bypassCheck } = result;

@@ -52,6 +52,13 @@ import { DynamoDbUtils } from '../utils/dynamoDb.util';
 import { TYPES } from './types';
 
 import AWS from 'aws-sdk';
+import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
+import { DocumentClient, DynamoDB } from "@aws-sdk/client-dynamodb";
+import { IoT } from "@aws-sdk/client-iot";
+import { IoTDataPlane } from "@aws-sdk/client-iot-data-plane";
+import { Lambda } from "@aws-sdk/client-lambda";
+import { SNS } from "@aws-sdk/client-sns";
+import { SQS } from "@aws-sdk/client-sqs";
 import AmazonDaxClient = require('amazon-dax-client');
 // Load everything needed to the Container
 export const container = new Container();
@@ -161,7 +168,9 @@ container
     .toFactory<AWS.DynamoDB>(() => {
         return () => {
             if (!container.isBound(TYPES.DynamoDB)) {
-                const dc = new AWS.DynamoDB({ region: process.env.AWS_REGION });
+                const dc = new DynamoDB({
+                    region: process.env.AWS_REGION
+                });
                 container.bind<AWS.DynamoDB>(TYPES.DynamoDB).toConstantValue(dc);
             }
             return container.get<AWS.DynamoDB>(TYPES.DynamoDB);
@@ -174,7 +183,7 @@ container
     .toFactory<AWS.DynamoDB.DocumentClient>(() => {
         return () => {
             if (!container.isBound(TYPES.DocumentClient)) {
-                const dc = new AWS.DynamoDB.DocumentClient({ region: process.env.AWS_REGION });
+                const dc = DynamoDBDocument.from(new DynamoDB({ region: process.env.AWS_REGION }));
                 container
                     .bind<AWS.DynamoDB.DocumentClient>(TYPES.DocumentClient)
                     .toConstantValue(dc);
@@ -188,18 +197,18 @@ container
         return () => {
             if (!container.isBound(TYPES.CachableDocumentClient)) {
                 // if we have DAX configured, return a DAX enabled DocumentClient, but if not just return the normal one
-                let dc: AWS.DynamoDB.DocumentClient;
+                let dc: DocumentClient;
                 if (process.env.AWS_DYNAMODB_DAX_ENDPOINTS) {
                     const dax = new AmazonDaxClient({
                         endpoints: process.env.AWS_DYNAMODB_DAX_ENDPOINTS,
                         region: process.env.AWS_REGION,
                     });
-                    dc = new AWS.DynamoDB.DocumentClient({ service: dax });
+                    dc = DynamoDBDocument.from(dax);
                 } else {
                     const dcf = container.get<interfaces.Factory<AWS.DynamoDB.DocumentClient>>(
                         TYPES.DocumentClientFactory
                     );
-                    dc = <AWS.DynamoDB.DocumentClient>dcf();
+                    dc = <DocumentClient>dcf();
                 }
                 container
                     .bind<AWS.DynamoDB.DocumentClient>(TYPES.CachableDocumentClient)
@@ -213,7 +222,9 @@ decorate(injectable(), AWS.Lambda);
 container.bind<interfaces.Factory<AWS.Lambda>>(TYPES.LambdaFactory).toFactory<AWS.Lambda>(() => {
     return () => {
         if (!container.isBound(TYPES.Lambda)) {
-            const l = new AWS.Lambda({ region: process.env.AWS_REGION });
+            const l = new Lambda({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.Lambda>(TYPES.Lambda).toConstantValue(l);
         }
         return container.get<AWS.Lambda>(TYPES.Lambda);
@@ -224,7 +235,9 @@ decorate(injectable(), AWS.SNS);
 container.bind<interfaces.Factory<AWS.SNS>>(TYPES.SNSFactory).toFactory<AWS.SNS>(() => {
     return () => {
         if (!container.isBound(TYPES.SNS)) {
-            const l = new AWS.SNS({ region: process.env.AWS_REGION });
+            const l = new SNS({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.SNS>(TYPES.SNS).toConstantValue(l);
         }
         return container.get<AWS.SNS>(TYPES.SNS);
@@ -235,7 +248,9 @@ decorate(injectable(), AWS.Iot);
 container.bind<interfaces.Factory<AWS.Iot>>(TYPES.IotFactory).toFactory<AWS.Iot>(() => {
     return () => {
         if (!container.isBound(TYPES.Iot)) {
-            const l = new AWS.Iot({ region: process.env.AWS_REGION });
+            const l = new IoT({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.Iot>(TYPES.Iot).toConstantValue(l);
         }
         return container.get<AWS.Iot>(TYPES.Iot);
@@ -248,9 +263,13 @@ container
     .toFactory<AWS.IotData>(() => {
         return () => {
             if (!container.isBound(TYPES.IotData)) {
-                const iotData = new AWS.IotData({
+                const iotData = new IoTDataPlane({
                     region: process.env.AWS_REGION,
-                    endpoint: `https://${process.env.AWS_IOT_ENDPOINT}`,
+
+                    // The transformation for endpoint is not implemented.
+                    // Refer to UPGRADING.md on aws-sdk-js-v3 for changes needed.
+                    // Please create/upvote feature request on aws-sdk-js-codemod for endpoint.
+                    endpoint: `https://${process.env.AWS_IOT_ENDPOINT}`
                 });
                 container.bind<AWS.IotData>(TYPES.IotData).toConstantValue(iotData);
             }
@@ -262,7 +281,9 @@ decorate(injectable(), AWS.SQS);
 container.bind<interfaces.Factory<AWS.SQS>>(TYPES.SQSFactory).toFactory<AWS.SQS>(() => {
     return () => {
         if (!container.isBound(TYPES.SQS)) {
-            const sqs = new AWS.SQS({ region: process.env.AWS_REGION });
+            const sqs = new SQS({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.SQS>(TYPES.SQS).toConstantValue(sqs);
         }
         return container.get<AWS.SQS>(TYPES.SQS);

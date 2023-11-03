@@ -11,7 +11,8 @@
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
 import { logger } from '@awssolutions/simple-cdf-logger';
-import AWS from 'aws-sdk';
+import { EventBridge } from "@aws-sdk/client-eventbridge";
+import { STS } from "@aws-sdk/client-sts";
 import { inject, injectable } from 'inversify';
 import ow from 'ow';
 import { TYPES } from '../di/types';
@@ -33,13 +34,13 @@ const { AWS_REGION } = process.env;
 
 @injectable()
 export class StackEventsCustomResource implements CustomResource {
-    private eventBridge: AWS.EventBridge;
-    private sts: AWS.STS;
+    private eventBridge: EventBridge;
+    private sts: STS;
 
     constructor(
         @inject(TYPES.EventBridgeFactory)
-        private eventBridgeFactory: (region: string) => AWS.EventBridge,
-        @inject(TYPES.STSFactory) stsFactory: () => AWS.STS
+        private eventBridgeFactory: (region: string) => EventBridge,
+        @inject(TYPES.STSFactory) stsFactory: () => STS
     ) {
         this.sts = stsFactory();
     }

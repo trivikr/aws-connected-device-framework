@@ -14,6 +14,12 @@ import 'reflect-metadata';
 
 import '@awssolutions/cdf-config-inject';
 import AWS from 'aws-sdk';
+import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
+import { DynamoDB } from "@aws-sdk/client-dynamodb";
+import { IoT } from "@aws-sdk/client-iot";
+import { IoTDataPlane } from "@aws-sdk/client-iot-data-plane";
+import { S3 } from "@aws-sdk/client-s3";
+import { SQS } from "@aws-sdk/client-sqs";
 // import AWSXRay from 'aws-xray-sdk-core';
 import { assetLibraryContainerModule } from '@awssolutions/cdf-assetlibrary-client';
 import { provisioningContainerModule } from '@awssolutions/cdf-provisioning-client';
@@ -112,6 +118,9 @@ container.bind<CheckBulkProvisioningAction>(TYPES.CheckBulkProvisioningAction).t
 
 container.bind<DynamoDbUtils>(TYPES.DynamoDbUtils).to(DynamoDbUtils);
 
+// JS SDK v3 does not support global configuration.
+// Codemod has attempted to pass values to each service client in this file.
+// You may need to update clients outside of this file, if they use global config.
 AWS.config.update({ region: process.env.AWS_REGION });
 
 // for 3rd party objects, we need to use factory injectors
@@ -121,7 +130,7 @@ container
     .toFactory<AWS.DynamoDB.DocumentClient>(() => {
         return () => {
             if (!container.isBound(TYPES.DocumentClient)) {
-                const dc = new AWS.DynamoDB.DocumentClient();
+                const dc = DynamoDBDocument.from(new DynamoDB());
                 container
                     .bind<AWS.DynamoDB.DocumentClient>(TYPES.DocumentClient)
                     .toConstantValue(dc);
@@ -134,7 +143,9 @@ decorate(injectable(), AWS.Iot);
 container.bind<interfaces.Factory<AWS.Iot>>(TYPES.IotFactory).toFactory<AWS.Iot>(() => {
     return () => {
         if (!container.isBound(TYPES.Iot)) {
-            const iot = new AWS.Iot();
+            const iot = new IoT({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.Iot>(TYPES.Iot).toConstantValue(iot);
         }
         return container.get<AWS.Iot>(TYPES.Iot);
@@ -147,8 +158,13 @@ container
     .toFactory<AWS.IotData>(() => {
         return () => {
             if (!container.isBound(TYPES.IotData)) {
-                const iotData = new AWS.IotData({
+                const iotData = new IoTDataPlane({
+                    // The transformation for endpoint is not implemented.
+                    // Refer to UPGRADING.md on aws-sdk-js-v3 for changes needed.
+                    // Please create/upvote feature request on aws-sdk-js-codemod for endpoint.
                     endpoint: process.env.AWS_IOT_ENDPOINT,
+
+                    region: process.env.AWS_REGION
                 });
                 container.bind<AWS.IotData>(TYPES.IotData).toConstantValue(iotData);
             }
@@ -163,7 +179,9 @@ decorate(injectable(), AWS.S3);
 container.bind<interfaces.Factory<AWS.S3>>(TYPES.S3Factory).toFactory<AWS.S3>(() => {
     return () => {
         if (!container.isBound(TYPES.S3)) {
-            const s3 = new AWS.S3();
+            const s3 = new S3({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.S3>(TYPES.S3).toConstantValue(s3);
         }
         return container.get<AWS.S3>(TYPES.S3);
@@ -175,7 +193,9 @@ decorate(injectable(), AWS.SQS);
 container.bind<interfaces.Factory<AWS.SQS>>(TYPES.SQSFactory).toFactory<AWS.SQS>(() => {
     return () => {
         if (!container.isBound(TYPES.SQS)) {
-            const sqs = new AWS.SQS();
+            const sqs = new SQS({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.SQS>(TYPES.SQS).toConstantValue(sqs);
         }
         return container.get<AWS.SQS>(TYPES.SQS);

@@ -13,7 +13,9 @@
 
 import 'reflect-metadata';
 
-import { AWSError, Iot, SQS } from 'aws-sdk';
+import { AWSError } from 'aws-sdk';
+import { IoT } from "@aws-sdk/client-iot";
+import { SQS } from "@aws-sdk/client-sqs";
 import createMockInstance from 'jest-create-mock-instance';
 
 import { CommandsDao } from '../commands/commands.dao';
@@ -37,7 +39,7 @@ describe('MessagesService', () => {
         mockedMessagesDao = createMockInstance(MessagesDao);
         mockedWorkflowFactory = createMockInstance(WorkflowFactory);
         mockedSQS = new SQS();
-        mockedIot = new Iot();
+        mockedIot = new IoT();
 
         const mockedSQSFactory = () => {
             return mockedSQS;

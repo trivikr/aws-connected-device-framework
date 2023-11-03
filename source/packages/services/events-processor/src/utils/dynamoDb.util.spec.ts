@@ -12,16 +12,17 @@
  *********************************************************************************************************************/
 import 'reflect-metadata';
 
-import AWS from 'aws-sdk';
+import { BatchWriteCommandInput, BatchWriteCommandOutput, DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
+import { DocumentClient, DynamoDB } from "@aws-sdk/client-dynamodb";
 
 import { DynamoDbUtils } from './dynamoDb.util';
 
 describe('DynamoDbUtils', () => {
-    let mockedDocumentClient: AWS.DynamoDB.DocumentClient;
+    let mockedDocumentClient: DocumentClient;
     let instance: DynamoDbUtils;
 
     beforeEach(() => {
-        mockedDocumentClient = new AWS.DynamoDB.DocumentClient();
+        mockedDocumentClient = DynamoDBDocument.from(new DynamoDB());
         const mockedDocumentClientFactory = () => {
             return mockedDocumentClient;
         };
@@ -30,7 +31,7 @@ describe('DynamoDbUtils', () => {
 
     it('a batch is split into chunks', () => {
         // stubs
-        const batch: AWS.DynamoDB.DocumentClient.BatchWriteItemInput = {
+        const batch: BatchWriteCommandInput = {
             RequestItems: {
                 table1: [
                     { PutRequest: { Item: { seq: { S: '1' } } } },
@@ -44,7 +45,7 @@ describe('DynamoDbUtils', () => {
             },
         };
 
-        const expected: AWS.DynamoDB.DocumentClient.BatchWriteItemInput[] = [
+        const expected: BatchWriteCommandInput[] = [
             {
                 RequestItems: {
                     table1: [
@@ -74,7 +75,7 @@ describe('DynamoDbUtils', () => {
 
     it('unprocessed chunks are rejoined', () => {
         // stubs
-        const unprocessed: AWS.DynamoDB.DocumentClient.BatchWriteItemOutput = {
+        const unprocessed: BatchWriteCommandOutput = {
             UnprocessedItems: {
                 table1: [
                     { PutRequest: { Item: { seq: { S: '1' } } } },
@@ -83,7 +84,7 @@ describe('DynamoDbUtils', () => {
                 table2: [{ PutRequest: { Item: { seq: { S: '3' } } } }],
             },
         };
-        const remaining: AWS.DynamoDB.DocumentClient.BatchWriteItemInput[] = [
+        const remaining: BatchWriteCommandInput[] = [
             {
                 RequestItems: {
                     table2: [{ PutRequest: { Item: { seq: { S: '4' } } } }],
@@ -103,7 +104,7 @@ describe('DynamoDbUtils', () => {
             },
         ];
 
-        const expected: AWS.DynamoDB.DocumentClient.BatchWriteItemOutput = {
+        const expected: BatchWriteCommandOutput = {
             UnprocessedItems: {
                 table1: [
                     { PutRequest: { Item: { seq: { S: '1' } } } },

@@ -12,6 +12,13 @@
  *********************************************************************************************************************/
 import '@awssolutions/cdf-config-inject';
 import AWS from 'aws-sdk';
+import { fromTemporaryCredentials } from "@aws-sdk/credential-providers";
+import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
+import { DynamoDB } from "@aws-sdk/client-dynamodb";
+import { Organizations } from "@aws-sdk/client-organizations";
+import { S3 } from "@aws-sdk/client-s3";
+import { ServiceCatalog } from "@aws-sdk/client-service-catalog";
+import { SFN } from "@aws-sdk/client-sfn";
 import { Container, decorate, injectable, interfaces } from 'inversify';
 import { HttpHeaderUtils } from '../utils/httpHeaders';
 import { TYPES } from './types';
@@ -95,7 +102,10 @@ container
     .bind<OrganizationalUnitsAssembler>(TYPES.OrganizationalUnitsAssembler)
     .to(OrganizationalUnitsAssembler);
 
-const managementAccountCredentials = new AWS.ChainableTemporaryCredentials({
+const managementAccountCredentials = // JS SDK v3 switched credential providers from classes to functions.
+// This is the closest approximation from codemod of what your application needs.
+// Reference: https://www.npmjs.com/package/@aws-sdk/credential-providers
+fromTemporaryCredentials({
     params: {
         RoleArn: process.env.MANAGEMENT_ACCOUNT_ASSUME_ROLE,
         RoleSessionName: `cdf-organization-assume-management`,
@@ -109,7 +119,7 @@ container
     .toFactory<AWS.DynamoDB.DocumentClient>(() => {
         return () => {
             if (!container.isBound(TYPES.DocumentClient)) {
-                const dc = new AWS.DynamoDB.DocumentClient({ region: process.env.AWS_REGION });
+                const dc = DynamoDBDocument.from(new DynamoDB({ region: process.env.AWS_REGION }));
                 container
                     .bind<AWS.DynamoDB.DocumentClient>(TYPES.DocumentClient)
                     .toConstantValue(dc);
@@ -125,9 +135,9 @@ container
     .toFactory<AWS.ServiceCatalog>(() => {
         return () => {
             if (!container.isBound(TYPES.ServiceCatalog)) {
-                const dc = new AWS.ServiceCatalog({
+                const dc = new ServiceCatalog({
                     credentials: managementAccountCredentials,
-                    region: process.env.AWS_REGION,
+                    region: process.env.AWS_REGION
                 });
                 container.bind<AWS.ServiceCatalog>(TYPES.ServiceCatalog).toConstantValue(dc);
             }
@@ -143,9 +153,9 @@ container
         return () => {
             const awsOrganizationsRegion = 'us-east-1';
             if (!container.isBound(TYPES.Organizations)) {
-                const organizations = new AWS.Organizations({
+                const organizations = new Organizations({
                     region: awsOrganizationsRegion,
-                    credentials: managementAccountCredentials,
+                    credentials: managementAccountCredentials
                 });
                 container
                     .bind<AWS.Organizations>(TYPES.Organizations)
@@ -162,7 +172,9 @@ container
     .toFactory<AWS.StepFunctions>(() => {
         return () => {
             if (!container.isBound(TYPES.StepFunctions)) {
-                const StepFunctions = new AWS.StepFunctions({ region: process.env.AWS_REGION });
+                const StepFunctions = new SFN({
+                    region: process.env.AWS_REGION
+                });
                 container
                     .bind<AWS.StepFunctions>(TYPES.StepFunctions)
                     .toConstantValue(StepFunctions);
@@ -176,7 +188,13 @@ decorate(injectable(), AWS.S3);
 container.bind<interfaces.Factory<AWS.S3>>(TYPES.S3Factory).toFactory<AWS.S3>(() => {
     return () => {
         if (!container.isBound(TYPES.S3)) {
-            const s3 = new AWS.S3({ region: process.env.AWS_REGION, signatureVersion: 'v4' });
+            const s3 = new S3({
+                region: process.env.AWS_REGION,
+
+                // The key signatureVersion is no longer supported in v3, and can be removed.
+                // @deprecated SDK v3 only supports signature v4.
+                signatureVersion: 'v4'
+            });
             container.bind<AWS.S3>(TYPES.S3).toConstantValue(s3);
         }
         return container.get<AWS.S3>(TYPES.S3);

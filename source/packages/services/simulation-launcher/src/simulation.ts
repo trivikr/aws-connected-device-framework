@@ -11,7 +11,7 @@
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
 import '@awssolutions/cdf-config-inject';
-import { TaskOverride } from 'aws-sdk/clients/ecs';
+import { ECS, TaskOverride } from "@aws-sdk/client-ecs";
 import { logger } from './utils/logger';
 
 import AWS from 'aws-sdk';
@@ -39,7 +39,7 @@ interface InstanceParams {
 }
 
 export class Simulation {
-    private readonly _ecs: AWS.ECS;
+    private readonly _ecs: ECS;
     private readonly _bucket: string;
     private readonly _subnetId: string;
     private readonly _clusterId: string;
@@ -47,7 +47,9 @@ export class Simulation {
     private readonly _taskDefinitionArn: string;
 
     constructor(region: string) {
-        this._ecs = new AWS.ECS({ region });
+        this._ecs = new ECS({
+            region
+        });
         this._bucket = process.env.AWS_S3_BUCKET;
         this._subnetId = process.env.AWS_ECS_SUBNETIDS;
         this._clusterId = process.env.AWS_ECS_CLUSTERID;

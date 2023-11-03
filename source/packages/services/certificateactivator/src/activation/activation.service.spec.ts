@@ -19,11 +19,13 @@ import {
 } from '@awssolutions/cdf-assetlibrary-client';
 import { ThingsService } from '@awssolutions/cdf-provisioning-client';
 import AWS, { AWSError } from 'aws-sdk';
+import { DescribeCertificateCommandOutput, IoT } from "@aws-sdk/client-iot";
+import { S3 } from "@aws-sdk/client-s3";
 import { mock } from 'jest-mock-extended';
 import { ActivationService } from './activation.service';
 
-let mockedIot: AWS.Iot;
-let mockedS3: AWS.S3;
+let mockedIot: IoT;
+let mockedS3: S3;
 let mockedDevicesService: jest.Mocked<DevicesService>;
 let mockedPoliciesService: jest.Mocked<PoliciesService>;
 let mockedThingsService: jest.Mocked<ThingsService>;
@@ -34,8 +36,8 @@ let instance: ActivationService;
 
 describe('ActivationService', () => {
     beforeEach(() => {
-        mockedS3 = new AWS.S3();
-        mockedIot = new AWS.Iot();
+        mockedS3 = new S3();
+        mockedIot = new IoT();
 
         mockedDevicesService = mock<DevicesService>();
         mockedPoliciesService = mock<PoliciesService>();
@@ -147,7 +149,7 @@ describe('ActivationService', () => {
         ));
 
         // cert pem has tempate ID and device ID in CN field: edge::TestCdfDevice001
-        const certResponse: AWS.Iot.DescribeCertificateResponse = {
+        const certResponse: DescribeCertificateCommandOutput = {
             certificateDescription: {
                 certificateArn: 'arn:aws:iot:us-west-2:xxxxxxxxxxxx:cert/test-cert-1',
                 certificateId: 'test-cert-1',
@@ -243,7 +245,7 @@ describe('ActivationService', () => {
         ));
 
         // cert pem has template ID and device ID in CN field: edge::TestCdfDevice001
-        const certResponse: AWS.Iot.DescribeCertificateResponse = {
+        const certResponse: DescribeCertificateCommandOutput = {
             certificateDescription: {
                 certificateArn: 'arn:aws:iot:us-west-2:xxxxxxxxxxxx:cert/test-cert-1',
                 certificateId: 'test-cert-1',

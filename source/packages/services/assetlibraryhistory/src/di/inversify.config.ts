@@ -32,6 +32,8 @@ import { HttpHeaderUtils } from '../utils/httpHeaders';
 import { TYPES } from './types';
 
 import AWS from 'aws-sdk';
+import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
+import { DynamoDB } from "@aws-sdk/client-dynamodb";
 // Load everything needed to the Container
 export const container = new Container();
 
@@ -75,7 +77,7 @@ container
     .toFactory<AWS.DynamoDB.DocumentClient>(() => {
         return () => {
             if (!container.isBound(TYPES.DocumentClient)) {
-                const dc = new AWS.DynamoDB.DocumentClient({ region: process.env.AWS_REGION });
+                const dc = DynamoDBDocument.from(new DynamoDB({ region: process.env.AWS_REGION }));
                 container
                     .bind<AWS.DynamoDB.DocumentClient>(TYPES.DocumentClient)
                     .toConstantValue(dc);

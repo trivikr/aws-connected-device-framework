@@ -11,7 +11,12 @@
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
 import { logger } from '@awssolutions/simple-cdf-logger';
-import AWS from 'aws-sdk';
+import {
+    AttachPolicyCommandInput,
+    CreatePolicyCommandInput,
+    GetPolicyCommandInput,
+    IoT,
+} from "@aws-sdk/client-iot";
 import { inject, injectable } from 'inversify';
 import ow from 'ow';
 import { TYPES } from '../../di/types';
@@ -23,10 +28,10 @@ import { ProvisioningStepProcessor } from './provisioningStepProcessor';
 export class ClientIdEnforcementPolicyStepProcessor implements ProvisioningStepProcessor {
     private _clientIdEnforcementPolicyTemplate: string;
 
-    private _iot: AWS.Iot;
+    private _iot: IoT;
 
     public constructor(
-        @inject(TYPES.IotFactory) iotFactory: () => AWS.Iot,
+        @inject(TYPES.IotFactory) iotFactory: () => IoT,
         @inject('aws.region') private region: string,
         @inject('aws.accountId') private accountId: string
     ) {
@@ -86,7 +91,7 @@ export class ClientIdEnforcementPolicyStepProcessor implements ProvisioningStepP
 
         // check to see if this policy already exists
         logger.debug(`checking to see if policy ${policyName} exists`);
-        const getPolicyParams: AWS.Iot.GetPolicyRequest = {
+        const getPolicyParams: GetPolicyCommandInput = {
             policyName,
         };
 
@@ -120,7 +125,7 @@ export class ClientIdEnforcementPolicyStepProcessor implements ProvisioningStepP
             );
 
             // create device specific policy and associate it with the certificate
-            const createPolicyParams: AWS.Iot.CreatePolicyRequest = {
+            const createPolicyParams: CreatePolicyCommandInput = {
                 policyName,
                 policyDocument: policy,
             };
@@ -129,7 +134,7 @@ export class ClientIdEnforcementPolicyStepProcessor implements ProvisioningStepP
 
         // attach policy
 
-        const attachPolicyParams: AWS.Iot.AttachPolicyRequest = {
+        const attachPolicyParams: AttachPolicyCommandInput = {
             policyName,
             target: certificateArn,
         };

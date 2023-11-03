@@ -11,16 +11,18 @@
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
 import { logger } from '@awssolutions/simple-cdf-logger';
-import AWS, { AWSError, Iot } from 'aws-sdk';
+import AWS, { AWSError } from 'aws-sdk';
 import {
-    DescribeThingGroupResponse,
-    DescribeThingRegistrationTaskRequest,
-    GetPolicyResponse,
-    RegisterThingRequest,
-    StartThingRegistrationTaskRequest,
-    StartThingRegistrationTaskResponse,
-} from 'aws-sdk/clients/iot';
-import { GetObjectOutput, GetObjectRequest, PutObjectRequest } from 'aws-sdk/clients/s3';
+    DescribeThingCommandOutput,
+    DescribeThingGroupCommandOutput,
+    DescribeThingRegistrationTaskCommandInput,
+    GetPolicyCommandOutput,
+    IoT,
+    RegisterThingCommandInput,
+    StartThingRegistrationTaskCommandInput,
+    StartThingRegistrationTaskCommandOutput,
+} from "@aws-sdk/client-iot";
+import { GetObjectCommandInput, GetObjectCommandOutput, PutObjectCommandInput, S3 } from "@aws-sdk/client-s3";
 import { PromiseResult } from 'aws-sdk/lib/request';
 import { inject, injectable } from 'inversify';
 import clone from 'just-clone';
@@ -47,12 +49,12 @@ import {
 
 @injectable()
 export class ThingsService {
-    private _iot: AWS.Iot;
-    private _s3: AWS.S3;
+    private _iot: IoT;
+    private _s3: S3;
 
     public constructor(
-        @inject(TYPES.IotFactory) iotFactory: () => AWS.Iot,
-        @inject(TYPES.S3Factory) s3Factory: () => AWS.S3,
+        @inject(TYPES.IotFactory) iotFactory: () => IoT,
+        @inject(TYPES.S3Factory) s3Factory: () => S3,
         @inject(TYPES.ClientIdEnforcementPolicyStepProcessor)
         private clientIdEnforcementPolicyStepProcessor: ClientIdEnforcementPolicyStepProcessor,
         @inject(TYPES.CreateDeviceCertificateStepProcessor)
@@ -91,7 +93,7 @@ export class ThingsService {
 
         // download the template
         const key = `${this.templatePrefix}${provisioningTemplateId}${this.templateSuffix}`;
-        const s3Params: AWS.S3.GetObjectRequest = {
+        const s3Params: GetObjectCommandInput = {
             Bucket: this.templateBucketName,
             Key: key,
         };
@@ -101,7 +103,7 @@ export class ThingsService {
             logger.silly(`things.service provision: s3Params: ${JSON.stringify(s3Params)}`);
             const result = (await this._s3
                 .getObject(s3Params)
-                .promise()) as AWS.S3.GetObjectOutput;
+                .promise()) as GetObjectCommandOutput;
             const templateBody = result.Body.toString();
 
             // lets strongly type the template body, so that we can determine the CDF specific pre/post steps (if any)
@@ -131,7 +133,7 @@ export class ThingsService {
         // ---- PROVISIONING ---------------
 
         // provision thing with AWS IoT
-        const iotParams: RegisterThingRequest = {
+        const iotParams: RegisterThingCommandInput = {
             templateBody: JSON.stringify(awsTemplate),
             parameters: stepData.parameters,
         };
@@ -263,11 +265,11 @@ export class ThingsService {
 
         // download the template
         const templateKey = `${this.templatePrefix}${provisioningTemplateId}${this.templateSuffix}`;
-        const s3TemplateParams: GetObjectRequest = {
+        const s3TemplateParams: GetObjectCommandInput = {
             Bucket: this.templateBucketName,
             Key: templateKey,
         };
-        const result = (await this._s3.getObject(s3TemplateParams).promise()) as GetObjectOutput;
+        const result = (await this._s3.getObject(s3TemplateParams).promise()) as GetObjectCommandOutput;
         const templateBody = result.Body.toString();
 
         // CDF extensions are not yet supported in the bulk registration flow
@@ -285,7 +287,7 @@ export class ThingsService {
             data.push(JSON.stringify(p).replace('\t', '').replace('\n', ''));
         });
         const bulkrequestKey = `${this.bulkrequestsPrefix}${uuid()}`;
-        const s3ThingsParam: PutObjectRequest = {
+        const s3ThingsParam: PutObjectCommandInput = {
             Body: Buffer.from(data.join('\n'), 'binary'),
             Bucket: this.bulkrequestsBucketName,
             Key: bulkrequestKey,
@@ -295,7 +297,7 @@ export class ThingsService {
         // TODO: add in support for pre-process steps to bulk provisioning (no need for it yet)
 
         // provision things within AWS IoT
-        const taskParams: StartThingRegistrationTaskRequest = {
+        const taskParams: StartThingRegistrationTaskCommandInput = {
             templateBody,
             inputFileBucket: this.bulkrequestsBucketName,
             inputFileKey: bulkrequestKey,
@@ -306,7 +308,7 @@ export class ThingsService {
         try {
             const task = (await this._iot
                 .startThingRegistrationTask(taskParams)
-                .promise()) as StartThingRegistrationTaskResponse;
+                .promise()) as StartThingRegistrationTaskCommandOutput;
             response = {
                 taskId: task.taskId,
             };
@@ -323,7 +325,7 @@ export class ThingsService {
     public async getBulkProvisionTask(taskId: string): Promise<BulkProvisionThingsResponse> {
         logger.debug(`things.service getBulkProvisionTask: in: taskId:${taskId}`);
 
-        const params: DescribeThingRegistrationTaskRequest = {
+        const params: DescribeThingRegistrationTaskCommandInput = {
             taskId,
         };
 
@@ -362,7 +364,7 @@ export class ThingsService {
             listThingGroupsForThingFuture,
         ]);
 
-        let thing: AWS.Iot.DescribeThingResponse = {};
+        let thing: DescribeThingCommandOutput = {};
         try {
             thing = results[0];
         } catch (e) {
@@ -419,7 +421,7 @@ export class ThingsService {
                 }
             }
 
-            const policyFutures: Promise<PromiseResult<GetPolicyResponse, AWSError>>[] = [];
+            const policyFutures: Promise<PromiseResult<GetPolicyCommandOutput, AWSError>>[] = [];
             for (const policyName of Object.keys(foundPolicies)) {
                 policyFutures.push(this._iot.getPolicy({ policyName }).promise());
             }
@@ -437,7 +439,7 @@ export class ThingsService {
         // TODO: this returns immmediate groups and does not traverse the group hierarchy
         const thingGroups = results[2];
         const describeThingGroupFutures: Promise<
-            PromiseResult<DescribeThingGroupResponse, AWSError>
+            PromiseResult<DescribeThingGroupCommandOutput, AWSError>
         >[] = [];
         for (const group of thingGroups.thingGroups) {
             describeThingGroupFutures.push(

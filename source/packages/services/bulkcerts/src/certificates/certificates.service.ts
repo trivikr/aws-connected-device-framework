@@ -29,23 +29,38 @@ import {
 } from './certificates.models';
 import { CertificatesTaskDao } from './certificatestask.dao';
 
-import AWS from 'aws-sdk';
+import {
+    ACMPCA,
+    ApiPassthrough,
+    GetCertificateCommandOutput,
+    IssueCertificateCommandInput,
+    IssueCertificateCommandOutput,
+} from "@aws-sdk/client-acm-pca";
+
+import {
+    CreateCertificateFromCsrCommandInput,
+    CreateCertificateFromCsrCommandOutput,
+    IoT,
+} from "@aws-sdk/client-iot";
+
+import { S3 } from "@aws-sdk/client-s3";
+import { SSM } from "@aws-sdk/client-ssm";
 @injectable()
 export class CertificatesService {
-    private _iot: AWS.Iot;
-    private _s3: AWS.S3;
-    private _ssm: AWS.SSM;
-    private _acmpca: AWS.ACMPCA;
+    private _iot: IoT;
+    private _s3: S3;
+    private _ssm: SSM;
+    private _acmpca: ACMPCA;
     private _defaultAcmConcurrencyLimit = 5;
 
     private _writeFileAsync = promisify(fs.writeFile);
 
     public constructor(
         @inject(TYPES.CertificatesTaskDao) private taskDao: CertificatesTaskDao,
-        @inject(TYPES.IotFactory) iotFactory: () => AWS.Iot,
-        @inject(TYPES.S3Factory) s3Factory: () => AWS.S3,
-        @inject(TYPES.SSMFactory) ssmFactory: () => AWS.SSM,
-        @inject(TYPES.ACMPCAFactory) acmpcaFactory: () => AWS.ACMPCA,
+        @inject(TYPES.IotFactory) iotFactory: () => IoT,
+        @inject(TYPES.S3Factory) s3Factory: () => S3,
+        @inject(TYPES.SSMFactory) ssmFactory: () => SSM,
+        @inject(TYPES.ACMPCAFactory) acmpcaFactory: () => ACMPCA,
         @inject('aws.s3.certificates.bucket') private certificatesBucket: string,
         @inject('aws.s3.certificates.prefix') private certificatesPrefix: string,
         @inject('defaults.chunkSize') private defaultChunkSize: number,
@@ -185,7 +200,7 @@ export class CertificatesService {
             certInfo.commonName = await this.createCommonName(certInfo.commonName, i);
             const csr = await this.createCSR(privateKey, certInfo);
 
-            const certificateResponse: AWS.Iot.CreateCertificateFromCsrResponse =
+            const certificateResponse: CreateCertificateFromCsrCommandOutput =
                 await this.getAwsIotCertificate(csr);
 
             const certificate = certificateResponse.certificatePem;
@@ -471,12 +486,12 @@ export class CertificatesService {
 
     private async getAwsIotCertificate(
         csr: string
-    ): Promise<AWS.Iot.CreateCertificateFromCsrResponse> {
-        const params: AWS.Iot.CreateCertificateFromCsrRequest = {
+    ): Promise<CreateCertificateFromCsrCommandOutput> {
+        const params: CreateCertificateFromCsrCommandInput = {
             certificateSigningRequest: csr,
             setAsActive: false,
         };
-        const data: AWS.Iot.CreateCertificateFromCsrResponse = await this._iot
+        const data: CreateCertificateFromCsrCommandOutput = await this._iot
             .createCertificateFromCsr(params)
             .promise();
         return data;
@@ -487,7 +502,7 @@ export class CertificatesService {
         certInfo: CertificateInfo,
         caArn: string
     ): Promise<ACMCertificate> {
-        const params: AWS.ACMPCA.IssueCertificateRequest = {
+        const params: IssueCertificateCommandInput = {
             Csr: csr,
             CertificateAuthorityArn: caArn,
             SigningAlgorithm: 'SHA256WITHRSA',
@@ -501,7 +516,7 @@ export class CertificatesService {
             certInfo?.stateName &&
             certInfo?.commonName
         ) {
-            const apiPassthrough: AWS.ACMPCA.ApiPassthrough = {
+            const apiPassthrough: ApiPassthrough = {
                 Subject: {
                     Country: certInfo.country,
                     Organization: certInfo.organization,
@@ -513,10 +528,10 @@ export class CertificatesService {
             params.ApiPassthrough = apiPassthrough;
         }
 
-        const data: AWS.ACMPCA.IssueCertificateResponse = await this._acmpca
+        const data: IssueCertificateCommandOutput = await this._acmpca
             .issueCertificate(params)
             .promise();
-        let cert: AWS.ACMPCA.GetCertificateResponse;
+        let cert: GetCertificateCommandOutput;
 
         // eslint-disable-next-line no-constant-condition
         while (true) {

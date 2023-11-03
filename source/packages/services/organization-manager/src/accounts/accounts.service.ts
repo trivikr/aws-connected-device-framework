@@ -12,7 +12,7 @@
  *********************************************************************************************************************/
 
 import { logger } from '@awssolutions/simple-cdf-logger';
-import { ProvisionProductInput } from 'aws-sdk/clients/servicecatalog';
+import { ProvisionProductCommandInput } from "@aws-sdk/client-service-catalog";
 import { inject, injectable } from 'inversify';
 import ow from 'ow';
 import { ComponentResourceList } from '../components/components.model';
@@ -210,7 +210,7 @@ export class AccountsService {
 
     private async convertRequestToServiceCatalogParameter(
         request: AccountCreationRequest
-    ): Promise<ProvisionProductInput> {
+    ): Promise<ProvisionProductCommandInput> {
         const searchProductsAsAdminResponse = await this._serviceCatalog
             .searchProductsAsAdmin({
                 Filters: { Owner: [this.accountFactoryProductOwner] },

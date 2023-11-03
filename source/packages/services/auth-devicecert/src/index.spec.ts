@@ -13,16 +13,16 @@
 
 import * as Lambda from './index';
 
-import AWS from 'aws-sdk';
+import { SSM } from "@aws-sdk/client-ssm";
 import { ApiGwCustomAuthorizer } from './api-gw.custom.authorizer';
 
 const region = 'us-xxxx-1';
-let mockedSsm: AWS.SSM;
+let mockedSsm: SSM;
 let apiGwCustomAuthorizerInstance: ApiGwCustomAuthorizer;
 
 describe('Cust Auth lambda', () => {
     beforeEach(() => {
-        mockedSsm = new AWS.SSM();
+        mockedSsm = new SSM();
         apiGwCustomAuthorizerInstance = new ApiGwCustomAuthorizer(region, mockedSsm);
         Lambda.setAwsRegion(region);
         Lambda.setApiGwCustomAuthorizer(apiGwCustomAuthorizerInstance);

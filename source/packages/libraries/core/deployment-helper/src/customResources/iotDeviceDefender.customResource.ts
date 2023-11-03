@@ -14,7 +14,7 @@ import { inject, injectable } from 'inversify';
 
 import { logger } from '@awssolutions/simple-cdf-logger';
 import AWS from 'aws-sdk';
-import Iot, { AuditCheckConfigurations } from 'aws-sdk/clients/iot';
+import { AuditCheckConfiguration, AuditNotificationTarget, IoT } from "@aws-sdk/client-iot";
 import ow from 'ow';
 import { TYPES } from '../di/types';
 import { CustomResource } from './customResource';
@@ -22,9 +22,9 @@ import { CustomResourceEvent } from './customResource.model';
 
 @injectable()
 export class IotDeviceDefenderCustomResource implements CustomResource {
-    private _iot: AWS.Iot;
+    private _iot: IoT;
 
-    constructor(@inject(TYPES.IotFactory) iotFactory: () => AWS.Iot) {
+    constructor(@inject(TYPES.IotFactory) iotFactory: () => IoT) {
         this._iot = iotFactory();
     }
 
@@ -47,13 +47,13 @@ export class IotDeviceDefenderCustomResource implements CustomResource {
         ow(targetArn, ow.string.nonEmpty);
         ow(targetRoleArn, ow.string.nonEmpty);
         const auditEnabled = auditCheckEnabled === 'true';
-        const auditCheckConfigurations: AuditCheckConfigurations = {
+        const auditCheckConfigurations: Record<string, AuditCheckConfiguration> = {
             DEVICE_CERTIFICATE_EXPIRING_CHECK: {
                 enabled: auditEnabled,
             },
         };
         const targetEnabledBoolean = targetEnabled === 'true';
-        const auditNotificationTargetConfigurations: Iot.AuditNotificationTargetConfigurations = {
+        const auditNotificationTargetConfigurations: Record<string, AuditNotificationTarget> = {
             SNS: {
                 targetArn,
                 roleArn: targetRoleArn,

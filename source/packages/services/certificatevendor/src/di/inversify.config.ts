@@ -27,6 +27,13 @@ import { TYPES } from './types';
 
 import AWS from 'aws-sdk';
 
+import { ACMPCA, ClientConfiguration } from "@aws-sdk/client-acm-pca";
+import { IoT } from "@aws-sdk/client-iot";
+import { IoTDataPlane } from "@aws-sdk/client-iot-data-plane";
+import { S3 } from "@aws-sdk/client-s3";
+import { SSM } from "@aws-sdk/client-ssm";
+import { STS } from "@aws-sdk/client-sts";
+
 // Load everything needed to the Container
 export const container = new Container();
 
@@ -105,7 +112,9 @@ decorate(injectable(), AWS.Iot);
 container.bind<interfaces.Factory<AWS.Iot>>(TYPES.IotFactory).toFactory<AWS.Iot>(() => {
     return () => {
         if (!container.isBound(TYPES.Iot)) {
-            const iot = new AWS.Iot({ region: process.env.AWS_REGION });
+            const iot = new IoT({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.Iot>(TYPES.Iot).toConstantValue(iot);
         }
         return container.get<AWS.Iot>(TYPES.Iot);
@@ -118,9 +127,13 @@ container
     .toFactory<AWS.IotData>(() => {
         return () => {
             if (!container.isBound(TYPES.IotData)) {
-                const iotData = new AWS.IotData({
+                const iotData = new IoTDataPlane({
                     region: process.env.AWS_REGION,
-                    endpoint: process.env.AWS_IOT_ENDPOINT,
+
+                    // The transformation for endpoint is not implemented.
+                    // Refer to UPGRADING.md on aws-sdk-js-v3 for changes needed.
+                    // Please create/upvote feature request on aws-sdk-js-codemod for endpoint.
+                    endpoint: process.env.AWS_IOT_ENDPOINT
                 });
                 container.bind<AWS.IotData>(TYPES.IotData).toConstantValue(iotData);
             }
@@ -133,7 +146,9 @@ decorate(injectable(), AWS.S3);
 container.bind<interfaces.Factory<AWS.S3>>(TYPES.S3Factory).toFactory<AWS.S3>(() => {
     return () => {
         if (!container.isBound(TYPES.S3)) {
-            const s3 = new AWS.S3({ region: process.env.AWS_REGION });
+            const s3 = new S3({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.S3>(TYPES.S3).toConstantValue(s3);
         }
         return container.get<AWS.S3>(TYPES.S3);
@@ -145,7 +160,9 @@ decorate(injectable(), AWS.SSM);
 container.bind<interfaces.Factory<AWS.SSM>>(TYPES.SSMFactory).toFactory<AWS.SSM>(() => {
     return () => {
         if (!container.isBound(TYPES.SSM)) {
-            const ssm = new AWS.SSM({ region: process.env.AWS_REGION });
+            const ssm = new SSM({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.SSM>(TYPES.SSM).toConstantValue(ssm);
         }
         return container.get<AWS.SSM>(TYPES.SSM);
@@ -157,7 +174,9 @@ decorate(injectable(), AWS.STS);
 container.bind<interfaces.Factory<AWS.STS>>(TYPES.STSFactory).toFactory<AWS.STS>(() => {
     return () => {
         if (!container.isBound(TYPES.STS)) {
-            const sts = new AWS.STS({ region: process.env.AWS_REGION });
+            const sts = new STS({
+                region: process.env.AWS_REGION
+            });
             container.bind<AWS.STS>(TYPES.STS).toConstantValue(sts);
         }
         return container.get<AWS.STS>(TYPES.STS);
@@ -173,7 +192,7 @@ container.bind<interfaces.Factory<AWS.ACMPCA>>(TYPES.ACMPCAFactory).toFactory<AW
 
         // if not bound yet, or the STS token is expired, bind it
         if (!container.isBound(TYPES.ACMPCA) || isStsTokenAboutToExpire(acmPcaStsExpiresAt)) {
-            const acmpcaConfig: AWS.ACMPCA.ClientConfiguration = {
+            const acmpcaConfig: ClientConfiguration = {
                 region,
             };
 
@@ -201,7 +220,7 @@ container.bind<interfaces.Factory<AWS.ACMPCA>>(TYPES.ACMPCAFactory).toFactory<AW
                 );
             }
 
-            const acmpca = new AWS.ACMPCA(acmpcaConfig);
+            const acmpca = new ACMPCA(acmpcaConfig);
             if (container.isBound(TYPES.ACMPCA)) {
                 container.rebind<AWS.ACMPCA>(TYPES.ACMPCA).toConstantValue(acmpca);
             } else {

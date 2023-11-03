@@ -13,8 +13,8 @@
 
 import 'reflect-metadata';
 
-import AWS from 'aws-sdk';
-import { ProvisionProductInput } from 'aws-sdk/clients/servicecatalog';
+import { Organizations } from "@aws-sdk/client-organizations";
+import { ProvisionProductCommandInput, ServiceCatalog } from "@aws-sdk/client-service-catalog";
 import { createMockInstance } from 'jest-create-mock-instance';
 import { ComponentResource } from '../components/components.model';
 import { OrganizationalUnitsDao } from '../organizationalUnits/organizationalUnits.dao';
@@ -53,15 +53,15 @@ describe('AccountsService', function () {
     };
 
     let instance: AccountsService;
-    let mockedServiceCatalog: AWS.ServiceCatalog;
-    let mockedOrganizations: AWS.Organizations;
+    let mockedServiceCatalog: ServiceCatalog;
+    let mockedOrganizations: Organizations;
 
-    mockedServiceCatalog = new AWS.ServiceCatalog();
+    mockedServiceCatalog = new ServiceCatalog();
     const mockedServiceCatalogFactory = () => {
         return mockedServiceCatalog;
     };
 
-    mockedOrganizations = new AWS.Organizations();
+    mockedOrganizations = new Organizations();
     const mockedOrganizationsFactory = () => {
         return mockedOrganizations;
     };
@@ -168,7 +168,7 @@ describe('AccountsService', function () {
 
         expect(createAccountRequest.accountId).toBeUndefined();
         expect(createAccountRequest.status).toBe('CREATING');
-        const provisionProductRequest: ProvisionProductInput =
+        const provisionProductRequest: ProvisionProductCommandInput =
             mockedProvisionProduct.mock.calls[0][0];
 
         expect(provisionProductRequest.ProvisionedProductName).toBe('cdf-account-one');

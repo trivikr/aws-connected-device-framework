@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
-import AWS, { Iot } from 'aws-sdk';
+import { CreateJobCommandInput, IoT } from "@aws-sdk/client-iot";
 import { createMockInstance } from 'jest-create-mock-instance';
 import { CommandItem } from '../../commands/commands.models';
 import { MessagesDao } from '../messages.dao';
@@ -10,12 +10,12 @@ import { JobAction } from './workflow.job';
 describe('Workflow.Job', () => {
     let mockedIot: Iot;
     let underTest: JobAction;
-    let mockedIotFactory: () => AWS.Iot;
+    let mockedIotFactory: () => IoT;
 
     let mockedMessagesDao: MessagesDao;
 
     beforeEach(() => {
-        mockedIot = new Iot();
+        mockedIot = new IoT();
         mockedMessagesDao = createMockInstance(MessagesDao);
         mockedIotFactory = () => {
             return mockedIot;
@@ -52,7 +52,7 @@ describe('Workflow.Job', () => {
         await underTest.process(message, command);
         expect(mockedIot.createJob).toBeCalledTimes(1);
         const createJobRequest = (mockedIot.createJob as jest.Mock).mock
-            .calls[0][0] as Iot.CreateJobRequest;
+            .calls[0][0] as CreateJobCommandInput;
         expect(createJobRequest.targets.length).toBe(2);
     });
 
@@ -76,7 +76,7 @@ describe('Workflow.Job', () => {
         await underTest.process(message, command);
         expect(mockedIot.createJob).toBeCalledTimes(1);
         const createJobRequest = (mockedIot.createJob as jest.Mock).mock
-            .calls[0][0] as Iot.CreateJobRequest;
+            .calls[0][0] as CreateJobCommandInput;
         expect(createJobRequest.targets.length).toBe(3);
         expect(createJobRequest.targets[0]).toBe('arn:aws:iot:us-west-2:1234:thing/thing1');
         expect(createJobRequest.targets[1]).toBe('arn:aws:iot:us-west-2:1234:thing/thing2');

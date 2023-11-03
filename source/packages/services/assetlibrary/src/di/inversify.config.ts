@@ -28,6 +28,7 @@ import * as lite from './inversify.config.lite';
 import { TYPES } from './types';
 
 import AWS from 'aws-sdk';
+import { IoTDataPlane } from "@aws-sdk/client-iot-data-plane";
 // Load everything needed to the Container
 export const container = new Container();
 
@@ -63,9 +64,13 @@ container
     .toFactory<AWS.IotData>(() => {
         return () => {
             if (!container.isBound(TYPES.IotData)) {
-                const iotData = new AWS.IotData({
+                const iotData = new IoTDataPlane({
                     region: process.env.AWS_REGION,
-                    endpoint: `https://${process.env.AWS_IOT_ENDPOINT}`,
+
+                    // The transformation for endpoint is not implemented.
+                    // Refer to UPGRADING.md on aws-sdk-js-v3 for changes needed.
+                    // Please create/upvote feature request on aws-sdk-js-codemod for endpoint.
+                    endpoint: `https://${process.env.AWS_IOT_ENDPOINT}`
                 });
                 container.bind<AWS.IotData>(TYPES.IotData).toConstantValue(iotData);
             }
